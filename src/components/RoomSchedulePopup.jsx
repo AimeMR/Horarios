@@ -27,49 +27,25 @@ const AFTERNOON_SLOTS = [
   { start: '20:00', end: '21:00', label: '20:00 – 21:00' },
 ];
 
-// Paleta de 12 colores diferenciados por asignatura
+// Paleta de 16 colores vivos, atractivos y contrastados
 const SUBJECT_THEMES = [
-  { bg: '#eff6ff', border: '#2563eb', text: '#1e3a8a', badgeBg: '#dbeafe', badgeText: '#1e40af' }, // Azul (Càlcul)
-  { bg: '#ecfdf5', border: '#059669', text: '#064e3b', badgeBg: '#d1fae5', badgeText: '#065f46' }, // Verde esmeralda (Física)
-  { bg: '#eef2ff', border: '#4f46e5', text: '#312e81', badgeBg: '#e0e7ff', badgeText: '#3730a3' }, // Índigo (Programació)
-  { bg: '#fffbeb', border: '#d97706', text: '#78350f', badgeBg: '#fef3c7', badgeText: '#92400e' }, // Ámbar (Àlgebra)
-  { bg: '#faf5ff', border: '#9333ea', text: '#581c87', badgeBg: '#f3e8ff', badgeText: '#6b21a8' }, // Púrpura (Estructures de Dades)
-  { bg: '#ecfeff', border: '#0891b2', text: '#164e63', badgeBg: '#cffafe', badgeText: '#155e75' }, // Cian (Sistemes Operatius)
-  { bg: '#fff7ed', border: '#ea580c', text: '#7c2d12', badgeBg: '#ffedd5', badgeText: '#9a3412' }, // Naranja / Coral (Bases de Dades)
-  { bg: '#fff1f2', border: '#e11d48', text: '#881337', badgeBg: '#ffe4e6', badgeText: '#9f1239' }, // Rosa frambuesa (Xarxes)
-  { bg: '#f7fee7', border: '#65a30d', text: '#365314', badgeBg: '#ecfccb', badgeText: '#3f6212' }, // Verde lima (Enginyeria Software)
-  { bg: '#fdf4ff', border: '#c026d3', text: '#701a75', badgeBg: '#fae8ff', badgeText: '#86198f' }, // Fucsia (Intel·ligència Artificial)
-  { bg: '#f0f9ff', border: '#0284c7', text: '#0c4a6e', badgeBg: '#e0f2fe', badgeText: '#0369a1' }, // Celeste (Aprenentatge Automàtic)
-  { bg: '#f5f3ff', border: '#7c3aed', text: '#4c1d95', badgeBg: '#ede9fe', badgeText: '#5b21b6' }, // Violeta (Ciberseguretat)
+  { bg: '#eff6ff', border: '#2563eb', text: '#1e3a8a', badgeBg: '#dbeafe', badgeText: '#1e40af' }, // Azul Cobalto
+  { bg: '#ecfdf5', border: '#059669', text: '#064e3b', badgeBg: '#d1fae5', badgeText: '#065f46' }, // Verde Esmeralda
+  { bg: '#fffbeb', border: '#d97706', text: '#78350f', badgeBg: '#fef3c7', badgeText: '#92400e' }, // Ámbar Dorado
+  { bg: '#faf5ff', border: '#9333ea', text: '#581c87', badgeBg: '#f3e8ff', badgeText: '#6b21a8' }, // Púrpura Intenso
+  { bg: '#ecfeff', border: '#0891b2', text: '#164e63', badgeBg: '#cffafe', badgeText: '#155e75' }, // Cian / Azul Petróleo
+  { bg: '#fff7ed', border: '#ea580c', text: '#7c2d12', badgeBg: '#ffedd5', badgeText: '#9a3412' }, // Naranja / Coral
+  { bg: '#fff1f2', border: '#e11d48', text: '#881337', badgeBg: '#ffe4e6', badgeText: '#9f1239' }, // Rosa Frambuesa
+  { bg: '#f7fee7', border: '#65a30d', text: '#365314', badgeBg: '#ecfccb', badgeText: '#3f6212' }, // Verde Lima
+  { bg: '#eef2ff', border: '#4f46e5', text: '#312e81', badgeBg: '#e0e7ff', badgeText: '#3730a3' }, // Añil / Índigo
+  { bg: '#fdf4ff', border: '#c026d3', text: '#701a75', badgeBg: '#fae8ff', badgeText: '#86198f' }, // Fucsia Magenta
+  { bg: '#f0f9ff', border: '#0284c7', text: '#0c4a6e', badgeBg: '#e0f2fe', badgeText: '#0369a1' }, // Celeste Cielo
+  { bg: '#f5f3ff', border: '#7c3aed', text: '#4c1d95', badgeBg: '#ede9fe', badgeText: '#5b21b6' }, // Violeta
+  { bg: '#fefce8', border: '#ca8a04', text: '#713f12', badgeBg: '#fef08a', badgeText: '#854d0e' }, // Ocre Mostaza
+  { bg: '#f0fdf4', border: '#16a34a', text: '#14532d', badgeBg: '#dcfce7', badgeText: '#15803d' }, // Verde Bosque
+  { bg: '#f0fdfa', border: '#0d9488', text: '#134e4a', badgeBg: '#ccfbf1', badgeText: '#115e59' }, // Turquesa
+  { bg: '#fff1f1', border: '#be123c', text: '#881337', badgeBg: '#ffe4e6', badgeText: '#9f1239' }, // Carmesí
 ];
-
-const PRESET_SUBJECT_INDEX = {
-  '240012': 0, // Càlcul I
-  '240011': 1, // Física I
-  '240013': 2, // Programació I
-  '240021': 3, // Àlgebra Lineal
-  '240022': 4, // Estructures de Dades
-  '240023': 5, // Sistemes Operatius
-  '240031': 6, // Bases de Dades
-  '240032': 7, // Xarxes de Computadors
-  '240041': 8, // Enginyeria del Software
-  '240051': 9, // Intel·ligència Artificial
-  '240052': 10, // Aprenentatge Automàtic
-  '240061': 11, // Ciberseguretat Avançada
-};
-
-function getSubjectTheme(codi, name = '') {
-  if (codi && PRESET_SUBJECT_INDEX[codi] !== undefined) {
-    return SUBJECT_THEMES[PRESET_SUBJECT_INDEX[codi]];
-  }
-  let hash = 0;
-  const str = codi || name || 'subject';
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return SUBJECT_THEMES[Math.abs(hash) % SUBJECT_THEMES.length];
-}
 
 function sessionCoversSlot(session, slot) {
   if (!session || !session.hIni || !session.hFi) return false;
@@ -131,6 +107,54 @@ export default function RoomSchedulePopup({ room, onClose }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [room, onClose]);
+
+  // Asignación dinámica, única y determinista de colores por asignatura para este horario
+  const subjectThemeMap = useMemo(() => {
+    if (!scheduleData?.items) return {};
+
+    // 1. Extraer identificadores únicos de las asignaturas presentes en este horario
+    const uniqueSubjectIds = [];
+    scheduleData.items.forEach((item) => {
+      const key = item.assignatura?.codi || item.assignatura?.nom;
+      if (key && !uniqueSubjectIds.includes(key)) {
+        uniqueSubjectIds.push(key);
+      }
+    });
+
+    // Ordenar canónicamente para que no dependa del orden de los registros
+    uniqueSubjectIds.sort();
+
+    // 2. Semilla determinista basada en el aula para que sea reproducible al abrir y cerrar
+    let seed = 0;
+    const roomStr = room || 'default-room';
+    for (let i = 0; i < roomStr.length; i++) {
+      seed = (seed << 5) - seed + roomStr.charCodeAt(i);
+      seed |= 0;
+    }
+    seed = Math.abs(seed);
+
+    // 3. Barajar pseudo-aleatoriamente la paleta según la semilla
+    const paletteIndices = Array.from({ length: SUBJECT_THEMES.length }, (_, i) => i);
+    let currentSeed = seed;
+    const nextRand = () => {
+      currentSeed = (currentSeed * 9301 + 49297) % 233280;
+      return currentSeed / 233280;
+    };
+
+    for (let i = paletteIndices.length - 1; i > 0; i--) {
+      const j = Math.floor(nextRand() * (i + 1));
+      [paletteIndices[i], paletteIndices[j]] = [paletteIndices[j], paletteIndices[i]];
+    }
+
+    // 4. Asignar a cada asignatura del horario un color distinto del resto
+    const mapping = {};
+    uniqueSubjectIds.forEach((key, index) => {
+      const themeIndex = paletteIndices[index % paletteIndices.length];
+      mapping[key] = SUBJECT_THEMES[themeIndex];
+    });
+
+    return mapping;
+  }, [scheduleData, room]);
 
   // Construcción de la matriz semanal (Lunes a Viernes)
   const weeklyGrid = useMemo(() => {
@@ -227,7 +251,8 @@ export default function RoomSchedulePopup({ room, onClose }) {
 
                       const s = cell.session;
                       const isMerged = cell.rowSpan > 1;
-                      const theme = getSubjectTheme(s.assignatura?.codi, s.assignatura?.nom);
+                      const subjectKey = s.assignatura?.codi || s.assignatura?.nom;
+                      const theme = subjectThemeMap[subjectKey] || SUBJECT_THEMES[0];
 
                       return (
                         <td
@@ -296,7 +321,8 @@ export default function RoomSchedulePopup({ room, onClose }) {
 
                       const s = cell.session;
                       const isMerged = cell.rowSpan > 1;
-                      const theme = getSubjectTheme(s.assignatura?.codi, s.assignatura?.nom);
+                      const subjectKey = s.assignatura?.codi || s.assignatura?.nom;
+                      const theme = subjectThemeMap[subjectKey] || SUBJECT_THEMES[0];
 
                       return (
                         <td
