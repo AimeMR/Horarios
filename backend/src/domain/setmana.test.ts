@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { dataMateixaSetmana, diesDeSetmana, dillunsDeSetmana, hora, minuts } from "./setmana.js";
+import {
+  dataEfectiva,
+  dataMateixaSetmana,
+  diesDeSetmana,
+  dillunsDeSetmana,
+  hora,
+  horaSenseLimit,
+  minuts,
+} from "./setmana.js";
 
 describe("dillunsDeSetmana", () => {
   it.each([
@@ -63,5 +71,34 @@ describe("minuts i hora", () => {
 
   it.each([-1, 1440, 1.5])("hora rebutja %d", (valor) => {
     expect(() => hora(valor)).toThrow(RangeError);
+  });
+});
+
+describe("dataEfectiva", () => {
+  it("amb data (recuperació) retorna aquesta data", () => {
+    expect(dataEfectiva("2026-09-28", "2026-09-18", "V", "L")).toBe("2026-09-28");
+  });
+
+  it("sense data recalcula el dia dins la setmana de la data de partida", () => {
+    expect(dataEfectiva(null, "2026-09-18", "V", "J")).toBe("2026-09-17");
+    expect(dataEfectiva(null, "2026-09-18", "V", "V")).toBe("2026-09-18");
+    expect(dataEfectiva(null, "2026-09-14", "L", "V")).toBe("2026-09-18");
+  });
+});
+
+describe("horaSenseLimit", () => {
+  it("formata com hora dins del dia", () => {
+    expect(horaSenseLimit(0)).toBe("00:00");
+    expect(horaSenseLimit(8 * 60 + 30)).toBe("08:30");
+  });
+
+  it("admet 24:00 o més sense llançar", () => {
+    expect(horaSenseLimit(24 * 60)).toBe("24:00");
+    expect(horaSenseLimit(24 * 60 + 30)).toBe("24:30");
+  });
+
+  it("rebutja negatius i no enters", () => {
+    expect(() => horaSenseLimit(-1)).toThrow(RangeError);
+    expect(() => horaSenseLimit(1.5)).toThrow(RangeError);
   });
 });

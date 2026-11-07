@@ -1,8 +1,7 @@
 import type { Database } from "better-sqlite3";
 import type { DiaCalendari, FiltreParrilla, FranjaParrilla } from "../../domain/parrilla.js";
-import { type Dia, dataMateixaSetmana, hora, minuts } from "../../domain/setmana.js";
-
-export const LIMIT_SESSIONS = 1001;
+import { ASSIGNACIO_A_SETMANA_SQL, DATA_EFECTIVA_SQL } from "../../db/setmana-sql.js";
+import { type Dia, dataEfectiva, horaSenseLimit, minuts } from "../../domain/setmana.js";
 
 interface SessioRow {
   id_sessio: string;
@@ -49,7 +48,9 @@ const SELECT_SESSIONS = `
   JOIN grup g ON g.id_grup = s.id_grup
   JOIN assignatura asg ON asg.codi = g.codi
   WHERE a.id_versio = @idVersio
-    AND ((a.data IS NULL AND s.setmana = @setmana) OR (a.data BETWEEN @dilluns AND @divendres))`;
+    AND ${ASSIGNACIO_A_SETMANA_SQL}`;
+
+const ORDRE_SQL = ` ORDER BY ${DATA_EFECTIVA_SQL}, a.h_ini, a.aula IS NULL, a.aula, s.id_sessio`;
 
 const FILTRES_SQL: ReadonlyArray<readonly [keyof FiltreParrilla, string]> = [
   ["aula", "a.aula = @aula"],
@@ -132,10 +133,10 @@ function aFranja(row: SessioRow, profes: readonly string[], cohorts: readonly st
   const recuperada = row.data !== null;
   return {
     idSessio: row.id_sessio,
-    data: row.data ?? dataMateixaSetmana(row.data_partida, row.dia_partida, row.dia),
+    data: dataEfectiva(row.data, row.data_partida, row.dia_partida, row.dia),
     dia: row.dia,
     hIni: row.h_ini,
-    hFi: hora(minuts(row.h_ini) + row.durada_min),
+    hFi: horaSenseLimit(minuts(row.h_ini) + row.durada_min),
     duradaMin: row.durada_min,
     aula: row.aula,
     assignatura: { codi: row.codi, nom: row.nom },
@@ -158,11 +159,12 @@ export function sessionsDeSetmana(
   dilluns: string,
   divendres: string,
   filtre: FiltreParrilla,
+  limit: number,
 ): FranjaParrilla[] {
   const { sql, params } = clausesFiltre(filtre);
   const rows = db
-    .prepare(`${SELECT_SESSIONS}${sql} ORDER BY s.id_sessio LIMIT ${LIMIT_SESSIONS}`)
-    .all({ idVersio, setmana, dilluns, divendres, ...params }) as SessioRow[];
+    .prepare(`${SELECT_SESSIONS}${sql}${ORDRE_SQL} LIMIT @limit`)
+    .all({ idVersio, setmana, dilluns, divendres, limit, ...params }) as SessioRow[];
   const ids = rows.map((r) => r.id_sessio);
   const profes = profesPerSessio(db, ids);
   const cohorts = cohortsPerSessio(db, ids);

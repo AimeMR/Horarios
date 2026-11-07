@@ -1,4 +1,4 @@
-import { copyFileSync, mkdtempSync } from "node:fs";
+import { copyFileSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Database } from "better-sqlite3";
@@ -18,10 +18,18 @@ export function testDeps(): AppDeps {
   };
 }
 
-// Copia de la BD de fixtures en lectura/escritura; quien la pide la cierra.
-export function openWritableCopy(): { db: Database; path: string } {
+// Copia de la BD de fixtures en lectura/escritura; dispose() cierra la BD y borra el directorio temporal.
+export function openWritableCopy(): { db: Database; path: string; dispose: () => void } {
   const dir = mkdtempSync(path.join(tmpdir(), "horaris-copy-"));
   const copyPath = path.join(dir, "copy.db");
   copyFileSync(inject("dbPath"), copyPath);
-  return { db: openDatabase(copyPath), path: copyPath };
+  const db = openDatabase(copyPath);
+  return {
+    db,
+    path: copyPath,
+    dispose: () => {
+      db.close();
+      rmSync(dir, { recursive: true, force: true });
+    },
+  };
 }

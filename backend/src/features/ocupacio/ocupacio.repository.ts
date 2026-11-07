@@ -1,5 +1,7 @@
 import type { Database } from "better-sqlite3";
-import type { AssignacioSetmana, AulaOcupacio, TipusAula } from "../../domain/ocupacio.js";
+import { ASSIGNACIO_A_SETMANA_SQL } from "../../db/setmana-sql.js";
+import type { TipusAula } from "../../domain/aula.js";
+import type { AssignacioSetmana, AulaOcupacio } from "../../domain/ocupacio.js";
 
 interface AulaRow {
   codi: string;
@@ -37,7 +39,7 @@ const ASSIGNACIONS_SQL = `
   JOIN sessio s ON s.id_sessio = a.id_sessio
   WHERE a.id_versio = @idVersio
     AND a.aula IS NOT NULL
-    AND ((a.data IS NULL AND s.setmana = @setmana) OR (a.data BETWEEN @dilluns AND @divendres))`;
+    AND ${ASSIGNACIO_A_SETMANA_SQL}`;
 
 function toAula(row: AulaRow): AulaOcupacio {
   return {

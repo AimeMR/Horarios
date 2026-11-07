@@ -1,18 +1,7 @@
 import { z } from "zod";
-import { TIPUS_AULA, type Ocupacio } from "../../domain/ocupacio.js";
-import { dillunsDeSetmana } from "../../domain/setmana.js";
-import { setmanaSchema } from "../../http/params.js";
-
-const setmanaExistentSchema = setmanaSchema.superRefine((setmana, ctx) => {
-  try {
-    dillunsDeSetmana(setmana);
-  } catch (error) {
-    if (!(error instanceof RangeError)) {
-      throw error;
-    }
-    ctx.addIssue({ code: "custom", message: "setmana inexistent" });
-  }
-});
+import { TIPUS_AULA } from "../../domain/aula.js";
+import type { Ocupacio } from "../../domain/ocupacio.js";
+import { setmanaExistentSchema } from "../../http/params.js";
 
 export const ocupacioQuerySchema = z.object({
   setmana: setmanaExistentSchema,

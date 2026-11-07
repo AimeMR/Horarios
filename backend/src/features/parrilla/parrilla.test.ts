@@ -2,9 +2,12 @@ import express from "express";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { openWritableCopy, testDeps } from "../../../test/helpers.js";
+import { DATA_EFECTIVA_SQL } from "../../db/setmana-sql.js";
+import { type Dia, dataEfectiva } from "../../domain/setmana.js";
 import type { AppDeps } from "../../http/app.js";
 import { errorHandler, notFoundHandler } from "../../http/errors.js";
 import { parrillaRouter } from "./parrilla.controller.js";
+import { consultarParrilla } from "./parrilla.service.js";
 
 // Cada valor esperado se deriva de tests/fixtures/paquet_fals (sessions.csv, proposta_partida.csv, calendari.csv).
 // Setmana 2026-W38 = dilluns 2026-09-14 .. divendres 2026-09-18.
@@ -345,7 +348,7 @@ describe("GET /versions/:id/parrilla (versio 2 amb sessions mogudes, BD escrivib
   });
 
   afterAll(() => {
-    copia.db.close();
+    copia.dispose();
     base.db.close();
   });
 
@@ -423,7 +426,7 @@ describe("GET /versions/:id/parrilla (docencia vigent, BD escrivible)", () => {
   });
 
   afterAll(() => {
-    copia.db.close();
+    copia.dispose();
     base.db.close();
   });
 
@@ -431,5 +434,79 @@ describe("GET /versions/:id/parrilla (docencia vigent, BD escrivible)", () => {
     const { status, body } = await consulta(app, { setmana: "2026-W38", profe: "D906" });
     expect(status).toBe(200);
     expect(body.items).toEqual([]);
+  });
+});
+
+describe("consultarParrilla (límit i ordre a SQL, BD escrivible)", () => {
+  const copia = openWritableCopy();
+  const consultaW38 = { setmana: "2026-W38", filtre: { cohort: "GFA:1r" } };
+  let idMesAlt = "";
+
+  beforeAll(() => {
+    copia.db.exec(`
+      INSERT INTO versio_horari (id_versio, nom) VALUES (3, 'ordre');
+      INSERT INTO assignacio (id_versio, id_sessio, dia, h_ini, aula, data)
+        SELECT 3, id_sessio, dia, h_ini, aula, data FROM assignacio WHERE id_versio = 1;
+    `);
+    // La sessió de la cohort amb l'idSessio més alt passa a L 08:00 sense aula: ha de sortir la primera.
+    const ids = consultarParrilla(copia.db, 1, consultaW38).items.map((i) => i.idSessio);
+    idMesAlt = [...ids].sort().at(-1) ?? "";
+    copia.db
+      .prepare("UPDATE assignacio SET dia = 'L', h_ini = '08:00', aula = NULL WHERE id_versio = 3 AND id_sessio = ?")
+      .run(idMesAlt);
+  });
+
+  afterAll(() => {
+    copia.dispose();
+  });
+
+  it("amb límit 2 retorna els primers per data i hora, encara que tinguin l'idSessio més alt, i truncat", () => {
+    const ple = consultarParrilla(copia.db, 3, consultaW38);
+    expect(ple.truncat).toBe(false);
+    expect(ple.items[0]?.idSessio).toBe(idMesAlt);
+    expect(ple.items.length).toBeGreaterThan(2);
+
+    const parcial = consultarParrilla(copia.db, 3, consultaW38, 2);
+    expect(parcial.truncat).toBe(true);
+    expect(parcial.items.map((i) => i.idSessio)).toEqual(ple.items.slice(0, 2).map((i) => i.idSessio));
+  });
+
+  it("amb exactament el límit de files no hi ha truncat", () => {
+    const n = consultarParrilla(copia.db, 3, consultaW38).items.length;
+    const exacte = consultarParrilla(copia.db, 3, consultaW38, n);
+    expect(exacte.items).toHaveLength(n);
+    expect(exacte.truncat).toBe(false);
+    expect(consultarParrilla(copia.db, 3, consultaW38, n - 1).truncat).toBe(true);
+  });
+
+  it("l'expressió SQL de data efectiva coincideix amb dataEfectiva per a desplaçaments negatius, zero i positius", () => {
+    const files = copia.db
+      .prepare(
+        `SELECT a.dia, s.dia_partida, s.data_partida, ${DATA_EFECTIVA_SQL} AS data
+         FROM assignacio a JOIN sessio s ON s.id_sessio = a.id_sessio WHERE a.id_versio = 1 AND a.data IS NULL`,
+      )
+      .all() as Array<{ dia: Dia; dia_partida: Dia; data_partida: string; data: string }>;
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      expect(f.data).toBe(dataEfectiva(null, f.data_partida, f.dia_partida, f.dia));
+    }
+    const sql = (dia: string, partida: string): string =>
+      (
+        copia.db
+          .prepare(`SELECT date('2026-09-16', printf('%+d days', instr('LMXJV', ?) - instr('LMXJV', ?))) AS d`)
+          .get(dia, partida) as { d: string }
+      ).d;
+    expect(sql("L", "X")).toBe("2026-09-14");
+    expect(sql("X", "X")).toBe("2026-09-16");
+    expect(sql("V", "X")).toBe("2026-09-18");
+  });
+
+  it("una sessió que acaba passada la mitjanit no peta: hFi 24:30", () => {
+    copia.db.exec(`
+      UPDATE sessio SET durada_min = 90 WHERE id_sessio = 'S90001';
+      UPDATE assignacio SET h_ini = '23:00' WHERE id_versio = 3 AND id_sessio = 'S90001';
+    `);
+    const p = consultarParrilla(copia.db, 3, { setmana: "2026-W38", filtre: { grup: (copia.db.prepare("SELECT id_grup AS g FROM sessio WHERE id_sessio = 'S90001'").get() as { g: string }).g } });
+    expect(p.items.find((i) => i.idSessio === "S90001")?.hFi).toBe("24:30");
   });
 });

@@ -1,3 +1,4 @@
+import type { TipusAula } from "../../domain/aula.js";
 import { NotFoundError } from "../../domain/errors.js";
 import {
   MINUTS_SETMANA,
@@ -12,23 +13,18 @@ import {
   type Ocupacio,
   type OcupacioAula,
   type OcupacioFranja,
-  type TipusAula,
 } from "../../domain/ocupacio.js";
-import { dataMateixaSetmana, diesDeSetmana, minuts } from "../../domain/setmana.js";
+import { dataEfectiva, diesDeSetmana, minuts } from "../../domain/setmana.js";
 import type { OcupacioRepository } from "./ocupacio.repository.js";
 
 type Dies = ReturnType<typeof diesDeSetmana>;
-type Dia = Dies[number];
+type DiaSetmana = Dies[number];
 /** Intervals ocupats per aula i data efectiva. */
 type Ocupades = Map<string, Map<string, Interval[]>>;
 
 export interface OcupacioQuery {
   readonly setmana: string;
   readonly tipus: TipusAula | undefined;
-}
-
-function dataEfectiva(a: AssignacioSetmana): string {
-  return a.data ?? dataMateixaSetmana(a.dataPartida, a.diaPartida, a.dia);
 }
 
 function intervalDe(a: AssignacioSetmana): Interval {
@@ -40,7 +36,7 @@ function agrupa(assignacions: ReadonlyArray<AssignacioSetmana>): Ocupades {
   const perAula: Ocupades = new Map();
   for (const a of assignacions) {
     const perData = perAula.get(a.aula) ?? new Map<string, Interval[]>();
-    const data = dataEfectiva(a);
+    const data = dataEfectiva(a.data, a.dataPartida, a.diaPartida, a.dia);
     perData.set(data, [...(perData.get(data) ?? []), intervalDe(a)]);
     perAula.set(a.aula, perData);
   }
@@ -79,7 +75,7 @@ interface ConjuntsFranja {
   readonly ocupadesTotes: Ocupades;
 }
 
-function calculaFranja(dia: Dia, franja: Franja, c: ConjuntsFranja): OcupacioFranja {
+function calculaFranja(dia: DiaSetmana, franja: Franja, c: ConjuntsFranja): OcupacioFranja {
   const ocupades = c.considerades.filter((a) => ocupadaEn(c.ocupadesConsiderades, a.codi, dia.data, franja)).length;
   const ordinariesLliures = c.ordinaries.filter((a) => !ocupadaEn(c.ocupadesTotes, a.codi, dia.data, franja)).length;
   return {

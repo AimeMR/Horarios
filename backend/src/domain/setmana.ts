@@ -55,6 +55,11 @@ export function dataMateixaSetmana(dataPartida: string, diaPartida: Dia, dia: Di
   return isoData(msDeData(dataPartida) + desplacament * DIA_MS);
 }
 
+/** Data efectiva d'una assignació: `data` si és una recuperació; si no, la de `dia` a la setmana de la data de partida. */
+export function dataEfectiva(data: string | null, dataPartida: string, diaPartida: Dia, dia: Dia): string {
+  return data ?? dataMateixaSetmana(dataPartida, diaPartida, dia);
+}
+
 /** «HH:MM» -> minuts des de mitjanit. */
 export function minuts(hora: string): number {
   const m = HORA_RE.exec(hora);
@@ -72,4 +77,12 @@ export function hora(totalMinuts: number): string {
   const h = Math.floor(totalMinuts / 60);
   const m = totalMinuts % 60;
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+/** Com `hora`, però admet 24:00 o més (una sessió que acaba després de mitjanit): «24:30». */
+export function horaSenseLimit(totalMinuts: number): string {
+  if (!Number.isInteger(totalMinuts) || totalMinuts < 0) {
+    throw new RangeError("minuts fora de rang");
+  }
+  return `${String(Math.floor(totalMinuts / 60)).padStart(2, "0")}:${String(totalMinuts % 60).padStart(2, "0")}`;
 }

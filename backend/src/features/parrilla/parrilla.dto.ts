@@ -1,11 +1,10 @@
 import { z } from "zod";
 import type { ConsultaParrilla, FiltreParrilla, Parrilla } from "../../domain/parrilla.js";
-import { dillunsDeSetmana } from "../../domain/setmana.js";
-import { setmanaSchema } from "../../http/params.js";
+import { setmanaExistentSchema } from "../../http/params.js";
 
 export const parrillaQuerySchema = z
   .object({
-    setmana: setmanaSchema,
+    setmana: setmanaExistentSchema,
     aula: z
       .string()
       .regex(/^[A-Za-z0-9]{1,8}\/[A-Za-z0-9]{1,8}$/)
@@ -28,12 +27,6 @@ export const parrillaQuerySchema = z
       .optional(),
   })
   .superRefine((q, ctx) => {
-    try {
-      dillunsDeSetmana(q.setmana);
-    } catch (error) {
-      if (!(error instanceof RangeError)) throw error;
-      ctx.addIssue({ code: "custom", message: "setmana inexistent", path: ["setmana"] });
-    }
     if ([q.aula, q.cohort, q.profe, q.assignatura, q.grup].every((v) => v === undefined)) {
       ctx.addIssue({ code: "custom", message: "cal almenys un filtre", path: ["filtre"] });
     }

@@ -2,23 +2,15 @@ import { z } from "zod";
 import { TIPUS_AULA, type Aula } from "../../domain/aula.js";
 import { paginationSchema } from "../../http/pagination.js";
 
-const rejectRepeated = (query: unknown): unknown => {
-  if (typeof query !== "object" || query === null) return query;
-  return Object.fromEntries(Object.entries(query).map(([k, v]) => [k, Array.isArray(v) ? {} : v]));
-};
-
-export const aulesQuerySchema = z.preprocess(
-  rejectRepeated,
-  paginationSchema.extend({
-    tipus: z.enum(TIPUS_AULA).optional(),
-    capacitat_min: z
-      .string()
-      .regex(/^\d{1,4}$/)
-      .transform(Number)
-      .pipe(z.number().int().min(0).max(1000))
-      .optional(),
-  }),
-);
+export const aulesQuerySchema = paginationSchema.extend({
+  tipus: z.enum(TIPUS_AULA).optional(),
+  capacitat_min: z
+    .string()
+    .regex(/^\d{1,4}$/)
+    .transform(Number)
+    .pipe(z.number().int().min(0).max(1000))
+    .optional(),
+});
 
 export type AulesQuery = z.infer<typeof aulesQuerySchema>;
 

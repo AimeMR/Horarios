@@ -345,7 +345,7 @@ describe("GET /versions/:id/ocupacio (versio 2: reserva insuficient, solapament 
   });
 
   afterAll(() => {
-    copia.db.close();
+    copia.dispose();
     base.db.close();
   });
 
@@ -395,5 +395,45 @@ describe("GET /versions/:id/ocupacio (versio 2: reserva insuficient, solapament 
   it("amb filtre tipus Seminaris la reserva continua calculant-se sobre totes les ordinaries", async () => {
     const { body } = await consulta(app, { setmana: "2026-W38", tipus: "Seminaris" }, "2");
     expect(franja(body, "L", "08:30")).toMatchObject({ ocupades: 0, lliures: 1, ordinariesLliures: 1, reservaOk: false });
+  });
+});
+
+describe("GET /versions/:id/ocupacio (sessio recuperada, BD escrivible)", () => {
+  const copia = openWritableCopy();
+  const base = testDeps();
+  const app = buildApp({ ...base, db: copia.db });
+
+  beforeAll(() => {
+    copia.db.exec(`
+      INSERT INTO versio_horari (id_versio, nom) VALUES (2, 'recuperada');
+      INSERT INTO assignacio (id_versio, id_sessio, dia, h_ini, aula, data)
+        SELECT 2, id_sessio, dia, h_ini, aula, data FROM assignacio WHERE id_versio = 1;
+      UPDATE assignacio SET dia = 'L', h_ini = '09:00', data = '2026-09-28' WHERE id_versio = 2 AND id_sessio = 'S90003';
+    `);
+    // S90003 (Q7/7101, 90 min, V 09:00 de W38) es recupera el dilluns 2026-09-28 (W40) a les 09:00.
+  });
+
+  afterAll(() => {
+    copia.dispose();
+    base.db.close();
+  });
+
+  it("compta a la setmana de la recuperacio (perAula i perFranja) i no a l'original", async () => {
+    const w40 = await consulta(app, { setmana: "2026-W40" }, "2");
+    expect(aula(w40.body, "Q7/7101")).toMatchObject({ sessions: 1, minutsOcupats: 90 });
+    expect(franja(w40.body, "L", "08:30")).toMatchObject({ data: "2026-09-28", ocupades: 1 });
+    expect(franja(w40.body, "L", "09:30")).toMatchObject({ ocupades: 1 });
+    expect(franja(w40.body, "L", "10:30")).toMatchObject({ ocupades: 0 });
+
+    const w38 = await consulta(app, { setmana: "2026-W38" }, "2");
+    const original = await consulta(app, { setmana: "2026-W38" }, "1");
+    expect(aula(w38.body, "Q7/7101").sessions).toBe(aula(original.body, "Q7/7101").sessions - 1);
+    expect(aula(w38.body, "Q7/7101").minutsOcupats).toBe(aula(original.body, "Q7/7101").minutsOcupats - 90);
+    expect(franja(w38.body, "V", "09:30")).toMatchObject({ ocupades: 0 });
+  });
+
+  it("la versio 1 no te res a W40", async () => {
+    const { body } = await consulta(app, { setmana: "2026-W40" }, "1");
+    expect(aula(body, "Q7/7101")).toMatchObject({ sessions: 0, minutsOcupats: 0 });
   });
 });

@@ -1,7 +1,5 @@
-import type { Dia } from "./setmana.js";
-
-export const TIPUS_AULA = ["Aules docents", "Laboratoris docents", "Seminaris", "Aules informàtiques"] as const;
-export type TipusAula = (typeof TIPUS_AULA)[number];
+import type { TipusAula } from "./aula.js";
+import { type Dia, hora } from "./setmana.js";
 
 /** Interval semiobert [ini, fi) en minuts des de mitjanit. */
 export interface Interval {
@@ -20,17 +18,11 @@ export const MINUTS_SETMANA = MINUTS_DIA * 5;
 const NUM_FRANGES = 13;
 const DURADA_FRANJA = 60;
 
-function formatHora(totalMinuts: number): string {
-  const h = Math.floor(totalMinuts / 60);
-  const m = totalMinuts % 60;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
 /** Les 13 franges: inicis 08:30..20:30; cadascuna dura 60 min i la darrera acaba a les 21:00. */
 export function franges(): ReadonlyArray<Franja> {
   return Array.from({ length: NUM_FRANGES }, (_, i) => {
     const ini = FINESTRA.ini + i * DURADA_FRANJA;
-    return { hora: formatHora(ini), ini, fi: Math.min(ini + DURADA_FRANJA, FINESTRA.fi) };
+    return { hora: hora(ini), ini, fi: Math.min(ini + DURADA_FRANJA, FINESTRA.fi) };
   });
 }
 

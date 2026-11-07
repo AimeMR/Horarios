@@ -115,6 +115,7 @@ const informeRegleDesconeguda = {
 const informeForaDeEsquema = { restriccions: `${CONTINGUT_PRIVAT} no es un objeto`, objectius: 5 };
 
 let deps: AppDeps;
+let base: AppDeps;
 let writable: ReturnType<typeof openWritableCopy>;
 let app: express.Express;
 let idComplet = 0;
@@ -133,12 +134,14 @@ beforeAll(() => {
   idComplet = inserir("informe-complet", "VALIDA AMB RELAXACIONS DECLARADES", informeComplet);
   idDesconeguda = inserir("informe-regla-nova", "NO VALIDA", informeRegleDesconeguda);
   idInvalid = inserir("informe-invalid", null, informeForaDeEsquema);
-  deps = { ...testDeps(), db: writable.db };
+  base = testDeps();
+  deps = { ...base, db: writable.db };
   app = express().use("/versions", informeRouter(deps)).use(notFoundHandler()).use(errorHandler(deps.logger));
 });
 
 afterAll(() => {
-  writable.db.close();
+  base.db.close();
+  writable.dispose();
 });
 
 async function informe(id: number | string): Promise<{ status: number; body: RespostaBody; text: string }> {
