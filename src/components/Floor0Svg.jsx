@@ -1,15 +1,18 @@
 import React from 'react';
 
-export default function Floor0Svg({ selectedRoom, onSelectRoom }) {
+export default function Floor0Svg({ selectedRoom, onSelectRoom, matchingRooms = [] }) {
+  const matchingSet = React.useMemo(() => new Set(matchingRooms || []), [matchingRooms]);
+
   const renderRoom = (id, name, x, y, width, height, isSmall = false) => {
     const isSelected = selectedRoom === name;
+    const isMatch = matchingSet.has(name);
     const centerX = x + width / 2;
     const centerY = y + height / 2;
 
     return (
       <g
         key={id}
-        className={`room ${isSelected ? 'is-selected' : ''}`}
+        className={`room ${isSelected ? 'is-selected' : ''} ${isMatch ? 'is-filter-match' : ''}`}
         id={`room-${id}`}
         data-room={name}
         tabIndex={0}
@@ -60,6 +63,10 @@ export default function Floor0Svg({ selectedRoom, onSelectRoom }) {
           .room:hover text { fill: #0284C7 !important; }
           .room.is-selected .room-rect { fill: #BAE6FD !important; stroke: #0369A1 !important; stroke-width: 7 !important; }
           .room.is-selected text { fill: #0369A1 !important; font-weight: 800 !important; }
+          .room.is-filter-match .room-rect { fill: #2563EB !important; stroke: #1D4ED8 !important; stroke-width: 6 !important; filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.45)); }
+          .room.is-filter-match text { fill: #FFFFFF !important; font-weight: 800 !important; }
+          .room.is-filter-match:hover .room-rect { fill: #1D4ED8 !important; stroke: #1E40AF !important; stroke-width: 7 !important; }
+          .room.is-filter-match.is-selected .room-rect { fill: #1E40AF !important; stroke: #172554 !important; stroke-width: 8 !important; }
         `}</style>
       </defs>
 

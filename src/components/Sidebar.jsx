@@ -6,7 +6,8 @@ export default function Sidebar({
   onClose,
   filters,
   onFilterChange,
-  onResetFilters
+  onResetFilters,
+  onApplyFilters
 }) {
   const [openSections, setOpenSections] = useState({
     date: true,
@@ -34,7 +35,7 @@ export default function Sidebar({
   ];
 
   const formatDateBadge = (dateStr) => {
-    if (!dateStr) return 'Fecha';
+    if (!dateStr) return 'Cualquiera';
     const parts = dateStr.split('-');
     return parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateStr;
   };
@@ -91,7 +92,7 @@ export default function Sidebar({
         </button>
       </div>
 
-      <form className="filter-form" onSubmit={(e) => e.preventDefault()}>
+      <form className="filter-form" onSubmit={(e) => { e.preventDefault(); if (onApplyFilters) onApplyFilters(); }}>
         {/* 1. FECHA (DÍA CONCRETO) */}
         <div className={`filter-dropdown ${openSections.date ? 'is-open' : ''}`}>
           <button
@@ -120,12 +121,23 @@ export default function Sidebar({
           {openSections.date && (
             <div className="filter-dropdown-content">
               <div className="filter-subgroup">
-                <label className="filter-sublabel" htmlFor="date-input">Seleccionar día</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="filter-sublabel" htmlFor="date-input" style={{ marginBottom: 0 }}>Seleccionar día</label>
+                  {filters.date && (
+                    <button
+                      type="button"
+                      style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
+                      onClick={() => onFilterChange('date', '')}
+                    >
+                      Quitar fecha
+                    </button>
+                  )}
+                </div>
                 <input
                   type="date"
                   id="date-input"
                   className="form-control"
-                  value={filters.date}
+                  value={filters.date || ''}
                   onChange={(e) => onFilterChange('date', e.target.value)}
                 />
               </div>
@@ -319,7 +331,7 @@ export default function Sidebar({
             Limpiar filtros
           </button>
           <button type="submit" className="button button-primary">
-            Filtrar aulas
+            Aplicar filtros
           </button>
         </div>
       </form>

@@ -395,7 +395,10 @@ export function generateMockParrillaResponse(aula, data = '2026-11-07', versionI
     const s1 = SAMPLE_SUBJECTS[subIdx1];
     const s2 = SAMPLE_SUBJECTS[subIdx2];
     const s3 = SAMPLE_SUBJECTS[subIdx3];
-    const groupNum = 10 + (seed % 30);
+    
+    // Asignar grupo 450 a aulas de prueba en plantas 1, 2 y 3 para garantizar coincidencias cruzadas entre pisos
+    const isSpecialGroupRoom = ['Q4/1003', 'Q6/2004', 'QC/3088'].includes(aula);
+    const groupNum = isSpecialGroupRoom ? 450 : (10 + (seed % 30));
 
     // Mañana: bloque combinado de 2 horas (08:30 - 10:30)
     items.push({

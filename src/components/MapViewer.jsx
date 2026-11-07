@@ -5,7 +5,14 @@ import Floor2Svg from './Floor2Svg';
 import Floor3Svg from './Floor3Svg';
 import RoomSchedulePopup from './RoomSchedulePopup';
 
-export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, filters }) {
+export default function MapViewer({
+  currentFloor,
+  selectedRoom,
+  onSelectRoom,
+  filters,
+  appliedFilters,
+  matchingRooms = []
+}) {
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -224,16 +231,32 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
           }}
         >
           {currentFloor === 0 && (
-            <Floor0Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
+            <Floor0Svg
+              selectedRoom={selectedRoom}
+              onSelectRoom={handleRoomSelect}
+              matchingRooms={matchingRooms}
+            />
           )}
           {currentFloor === 1 && (
-            <Floor1Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
+            <Floor1Svg
+              selectedRoom={selectedRoom}
+              onSelectRoom={handleRoomSelect}
+              matchingRooms={matchingRooms}
+            />
           )}
           {currentFloor === 2 && (
-            <Floor2Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
+            <Floor2Svg
+              selectedRoom={selectedRoom}
+              onSelectRoom={handleRoomSelect}
+              matchingRooms={matchingRooms}
+            />
           )}
           {currentFloor === 3 && (
-            <Floor3Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
+            <Floor3Svg
+              selectedRoom={selectedRoom}
+              onSelectRoom={handleRoomSelect}
+              matchingRooms={matchingRooms}
+            />
           )}
         </div>
 
@@ -297,6 +320,7 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
           <RoomSchedulePopup
             room={selectedRoom}
             onClose={() => onSelectRoom(null)}
+            appliedFilters={appliedFilters}
           />
         )}
       </div>

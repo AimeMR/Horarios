@@ -1,6 +1,11 @@
 import React from 'react';
 
-export default function FloorSelector({ currentFloor, onSelectFloor }) {
+export default function FloorSelector({
+  currentFloor,
+  onSelectFloor,
+  floorMatchCounts = {},
+  hasActiveFilters = false
+}) {
   const floorDescriptions = {
     0: 'Planta 0 — Bloques Q1-Q6, Ala Central (QC) & Ala Sur (QP)',
     1: 'Planta 1 — Bloques Q1-Q6 y Ala Central (QC)',
@@ -25,20 +30,37 @@ export default function FloorSelector({ currentFloor, onSelectFloor }) {
           </svg>
         </button>
 
-        {/* Botones de las 4 plantas: 0, 1, 2 y 3 */}
+        {/* Botones de las 4 plantas: 0, 1, 2 y 3 con alerta de aulas coincidentes */}
         <div className="floor-indicators">
-          {[0, 1, 2, 3].map((num) => (
-            <button
-              key={num}
-              type="button"
-              className={`floor-pill ${currentFloor === num ? 'active' : ''}`}
-              onClick={() => onSelectFloor(num)}
-              aria-label={`Planta ${num}`}
-            >
-              <span className="pill-number">{num}</span>
-              <span className="pill-text">Planta {num}</span>
-            </button>
-          ))}
+          {[0, 1, 2, 3].map((num) => {
+            const count = floorMatchCounts[num] || 0;
+            const isOtherFloor = num !== currentFloor;
+            const showAlert = hasActiveFilters && count > 0;
+
+            return (
+              <div key={num} className="floor-indicator-item">
+                <button
+                  type="button"
+                  className={`floor-pill ${currentFloor === num ? 'active' : ''}`}
+                  onClick={() => onSelectFloor(num)}
+                  aria-label={`Planta ${num}`}
+                >
+                  <span className="pill-number">{num}</span>
+                  <span className="pill-text">Planta {num}</span>
+                </button>
+
+                {showAlert && (
+                  <div
+                    className={`floor-alert-badge ${isOtherFloor ? 'is-other-floor' : 'is-current-floor'}`}
+                    title={`${count} aula${count > 1 ? 's' : ''} que cumple${count > 1 ? 'n' : ''} el filtro en Planta ${num}`}
+                  >
+                    <span className="alert-icon">⚠️</span>
+                    <span className="alert-count">{count} {count === 1 ? 'aula' : 'aulas'}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Flecha Siguiente (deshabilitada en la planta 3) */}

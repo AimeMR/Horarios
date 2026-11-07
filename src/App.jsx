@@ -1,25 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import FloorSelector from './components/FloorSelector';
 import MapViewer from './components/MapViewer';
+import { evaluateAllFloorsFilters } from './services/scheduleFilterService';
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentFloor, setCurrentFloor] = useState(0); // 0, 1, 2 y 3
   const [selectedRoom, setSelectedRoom] = useState(null);
 
-  // Filtros: fecha (dia concreto), grado, curso, asignatura y grupo
+  // Filtros de trabajo del formulario en la barra lateral
   const [filters, setFilters] = useState({
-    date: '2026-11-07',
+    date: '',
     degree: '',
     course: '',
     subject: '',
     group: ''
   });
 
+  // Filtros aplicados efectivamente tras pulsar "Aplicar filtros"
+  const [appliedFilters, setAppliedFilters] = useState(null);
+
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleApplyFilters = () => {
+    setAppliedFilters({ ...filters });
   };
 
   const handleSelectRoomFromMap = (roomId) => {
@@ -27,15 +35,24 @@ export default function App() {
   };
 
   const handleResetFilters = () => {
-    setFilters({
-      date: '2026-11-07',
+    const emptyFilters = {
+      date: '',
       degree: '',
       course: '',
       subject: '',
       group: ''
-    });
+    };
+    setFilters(emptyFilters);
+    setAppliedFilters(null);
     setSelectedRoom(null);
   };
+
+  // Evaluación de aulas coincidentes en todos los pisos con los filtros aplicados
+  const filterEvaluation = useMemo(() => {
+    return evaluateAllFloorsFilters(appliedFilters);
+  }, [appliedFilters]);
+
+  const currentFloorMatchingRooms = filterEvaluation.matchingRoomsByFloor[currentFloor] || [];
 
   // Atajos de teclado: Ctrl+B para barra lateral, flechas para cambiar entre plantas 0, 1 y 2
   useEffect(() => {
@@ -82,6 +99,7 @@ export default function App() {
           filters={filters}
           onFilterChange={handleFilterChange}
           onResetFilters={handleResetFilters}
+          onApplyFilters={handleApplyFilters}
         />
 
         {/* CONTENIDO PRINCIPAL: SELECTOR DE PLANTAS (0, 1, 2, 3) Y VISOR DE MAPA */}
@@ -89,6 +107,8 @@ export default function App() {
           <FloorSelector
             currentFloor={currentFloor}
             onSelectFloor={setCurrentFloor}
+            floorMatchCounts={filterEvaluation.countsByFloor}
+            hasActiveFilters={filterEvaluation.hasActiveFilters}
           />
 
           <MapViewer
@@ -96,6 +116,8 @@ export default function App() {
             selectedRoom={selectedRoom}
             onSelectRoom={handleSelectRoomFromMap}
             filters={filters}
+            appliedFilters={appliedFilters}
+            matchingRooms={currentFloorMatchingRooms}
           />
         </main>
       </div>

@@ -21,18 +21,18 @@ export const DEFAULT_FILTER_DATA = {
     { id: 'ing-software', nombre: 'Grado en Ingeniería del Software', abreviatura: 'Software' }
   ],
   asignaturas: [
-    { id: 'prog1', nombre: 'Programación I', gradoId: 'ing-informatica', curso: '1' },
-    { id: 'eda', nombre: 'Estructuras de Datos y Algoritmos', gradoId: 'ing-informatica', curso: '2' },
-    { id: 'algebra', nombre: 'Álgebra Lineal', gradoId: 'ing-informatica', curso: '1' },
-    { id: 'calculo', nombre: 'Cálculo', gradoId: 'ing-informatica', curso: '1' },
-    { id: 'so', nombre: 'Sistemas Operativos', gradoId: 'ing-informatica', curso: '2' },
-    { id: 'redes', nombre: 'Redes de Computadores', gradoId: 'ing-informatica', curso: '3' },
-    { id: 'bd', nombre: 'Bases de Datos', gradoId: 'ing-informatica', curso: '2' },
-    { id: 'ia', nombre: 'Inteligencia Artificial', gradoId: 'ia', curso: '3' },
-    { id: 'ac', nombre: 'Arquitectura de Computadores', gradoId: 'ing-informatica', curso: '2' },
-    { id: 'is', nombre: 'Ingeniería del Software', gradoId: 'ing-software', curso: '3' },
-    { id: 'seguridad', nombre: 'Seguridad en Sistemas', gradoId: 'ciberseguridad', curso: '4' },
-    { id: 'tfg', nombre: 'Trabajo Fin de Grado', gradoId: 'ing-informatica', curso: '5' }
+    { id: '240012', nombre: 'Càlcul I', gradoId: 'ing-informatica', curso: '1' },
+    { id: '240011', nombre: 'Física I', gradoId: 'ing-informatica', curso: '1' },
+    { id: '240013', nombre: 'Programació I', gradoId: 'ing-informatica', curso: '1' },
+    { id: '240021', nombre: 'Àlgebra Lineal', gradoId: 'ing-informatica', curso: '1' },
+    { id: '240022', nombre: 'Estructures de Dades', gradoId: 'ing-informatica', curso: '2' },
+    { id: '240023', nombre: 'Sistemes Operatius', gradoId: 'ing-informatica', curso: '2' },
+    { id: '240031', nombre: 'Bases de Dades', gradoId: 'ing-informatica', curso: '2' },
+    { id: '240032', nombre: 'Xarxes de Computadors', gradoId: 'ing-informatica', curso: '3' },
+    { id: '240041', nombre: 'Enginyeria del Software', gradoId: 'ing-software', curso: '3' },
+    { id: '240051', nombre: 'Intel·ligència Artificial', gradoId: 'ia', curso: '4' },
+    { id: '240052', nombre: 'Aprenentatge Automàtic', gradoId: 'ia', curso: '4' },
+    { id: '240061', nombre: 'Ciberseguretat Avançada', gradoId: 'ciberseguridad', curso: '5' }
   ],
   grupos: [
     { id: 'g1-m', nombre: 'Grupo 1 (Mañana)', abreviatura: 'G1-M' },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getRoomSchedule } from '../services/scheduleService';
+import { matchesSessionFilter, hasActiveFilters } from '../services/scheduleFilterService';
 
 const DAYS = [
   { key: 'L', label: 'Lunes' },
@@ -47,6 +48,15 @@ const SUBJECT_THEMES = [
   { bg: '#fff1f1', border: '#be123c', text: '#881337', badgeBg: '#ffe4e6', badgeText: '#9f1239' }, // Carmesí
 ];
 
+// Tema gris para franjas que no coinciden con el filtro activo
+const GREY_THEME = {
+  bg: '#f1f5f9',
+  border: '#94a3b8',
+  text: '#64748b',
+  badgeBg: '#e2e8f0',
+  badgeText: '#475569'
+};
+
 function sessionCoversSlot(session, slot) {
   if (!session || !session.hIni || !session.hFi) return false;
   return session.hIni < slot.end && session.hFi > slot.start;
@@ -84,7 +94,7 @@ function buildDaySlotCells(slotDefinitions, daySessions) {
   return cells;
 }
 
-export default function RoomSchedulePopup({ room, onClose }) {
+export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
   const [scheduleData, setScheduleData] = useState(null);
 
   useEffect(() => {
@@ -197,7 +207,14 @@ export default function RoomSchedulePopup({ room, onClose }) {
         {/* Cabecera del pop-up con botón de cierre X */}
         <div className="schedule-modal-header">
           <div className="modal-header-titles">
-            <div className="modal-header-badge">Aula {room}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="modal-header-badge">Aula {room}</div>
+              {hasActiveFilters(appliedFilters) && (
+                <span className="modal-filter-tag">
+                  Filtro activo (franjas coincidentes destacadas)
+                </span>
+              )}
+            </div>
             <h2 className="modal-title">Horario Semanal</h2>
             <span className="modal-subtitle">Lunes a Viernes • 08:30 a 21:00</span>
           </div>
@@ -252,13 +269,15 @@ export default function RoomSchedulePopup({ room, onClose }) {
                       const s = cell.session;
                       const isMerged = cell.rowSpan > 1;
                       const subjectKey = s.assignatura?.codi || s.assignatura?.nom;
-                      const theme = subjectThemeMap[subjectKey] || SUBJECT_THEMES[0];
+                      const isFilterActive = hasActiveFilters(appliedFilters);
+                      const isSlotMatching = isFilterActive ? matchesSessionFilter(s, appliedFilters) : true;
+                      const theme = isSlotMatching ? (subjectThemeMap[subjectKey] || SUBJECT_THEMES[0]) : GREY_THEME;
 
                       return (
                         <td
                           key={day.key}
                           rowSpan={cell.rowSpan}
-                          className={`excel-cell excel-cell-occupied ${isMerged ? 'is-merged-slot' : ''}`}
+                          className={`excel-cell excel-cell-occupied ${isMerged ? 'is-merged-slot' : ''} ${!isSlotMatching ? 'is-slot-greyed' : 'is-slot-match'}`}
                           style={{
                             backgroundColor: theme.bg,
                             borderLeft: `4px solid ${theme.border}`,
@@ -322,13 +341,15 @@ export default function RoomSchedulePopup({ room, onClose }) {
                       const s = cell.session;
                       const isMerged = cell.rowSpan > 1;
                       const subjectKey = s.assignatura?.codi || s.assignatura?.nom;
-                      const theme = subjectThemeMap[subjectKey] || SUBJECT_THEMES[0];
+                      const isFilterActive = hasActiveFilters(appliedFilters);
+                      const isSlotMatching = isFilterActive ? matchesSessionFilter(s, appliedFilters) : true;
+                      const theme = isSlotMatching ? (subjectThemeMap[subjectKey] || SUBJECT_THEMES[0]) : GREY_THEME;
 
                       return (
                         <td
                           key={day.key}
                           rowSpan={cell.rowSpan}
-                          className={`excel-cell excel-cell-occupied ${isMerged ? 'is-merged-slot' : ''}`}
+                          className={`excel-cell excel-cell-occupied ${isMerged ? 'is-merged-slot' : ''} ${!isSlotMatching ? 'is-slot-greyed' : 'is-slot-match'}`}
                           style={{
                             backgroundColor: theme.bg,
                             borderLeft: `4px solid ${theme.border}`,
