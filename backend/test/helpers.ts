@@ -1,0 +1,27 @@
+import { copyFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import type { Database } from "better-sqlite3";
+import { inject } from "vitest";
+import { loadConfig } from "../src/config.js";
+import { openDatabase } from "../src/db/connection.js";
+import type { AppDeps } from "../src/http/app.js";
+import { createLogger } from "../src/http/logger.js";
+
+// Dependencias con la BD de fixtures abierta en solo lectura.
+export function testDeps(): AppDeps {
+  const dbPath = inject("dbPath");
+  return {
+    db: openDatabase(dbPath, { readonly: true }),
+    config: loadConfig({ HORARIS_DB: dbPath, LOG_LEVEL: "silent" }),
+    logger: createLogger("silent"),
+  };
+}
+
+// Copia de la BD de fixtures en lectura/escritura; quien la pide la cierra.
+export function openWritableCopy(): { db: Database; path: string } {
+  const dir = mkdtempSync(path.join(tmpdir(), "horaris-copy-"));
+  const copyPath = path.join(dir, "copy.db");
+  copyFileSync(inject("dbPath"), copyPath);
+  return { db: openDatabase(copyPath), path: copyPath };
+}
