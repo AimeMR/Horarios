@@ -44,8 +44,10 @@ Notas de carga:
 
 ## `grup.id_grup_teoria`
 
-Regla: primero la TE de la misma asignatura cuyo número es exactamente la línea del subgrupo; si no existe, la única
-TE de esa línea; si no, NULL. Los `id_grup` van como `codi·grup`.
+Regla (criterio del verificador, `horaris/check.py`): primero la TE de la misma asignatura cuyo número es exactamente
+la línea del subgrupo; si no existe, la única TE de esa línea; si no hay ninguna de la línea, la TE con el mismo
+número que el subgrupo (regla «/challenge H2»: TE/415 y PAUL/415 son el mismo alumnado); si no, NULL. Los `id_grup`
+van como `codi·grup`.
 
 | Subgrupo | id_grup_teoria | Motivo |
 |---|---|---|
@@ -54,8 +56,8 @@ TE de esa línea; si no, NULL. Los `id_grup` van como `codi·grup`.
 | 900002·PAUL/311 | 900002·TE/31 | línea 31; hay TE/31 y TE/310, gana la de número exacto 31 |
 | 900002·PLAB/311 | 900002·TE/31 | línea 31; mismo caso ambiguo |
 | 900091·PAUL/911 | 900091·TE/91 | línea 91 |
-| 900003·PAUL/415 | NULL | línea 41; no hay TE/41 (la TE es TE/415, línea 415) |
+| 900003·PAUL/415 | 900003·TE/415 | línea 41 sin TE; regla H2: TE/415 tiene su mismo número |
 | 900006·PLAB/61 | NULL | línea 61; la asignatura no tiene TE |
 | 900092·PAUL/921 | NULL | línea 92; la asignatura no tiene TE/92 |
 
-Subgrupos con `id_grup_teoria`: 5. Subgrupos sin él: 3. Los grupos TE nunca lo tienen (CHECK del esquema).
+Subgrupos con `id_grup_teoria`: 6. Subgrupos sin él: 2. Los grupos TE nunca lo tienen (CHECK del esquema).

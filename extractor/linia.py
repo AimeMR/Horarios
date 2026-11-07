@@ -21,9 +21,25 @@ def linia(tipus: str, grup: str) -> str:
     return n[:-1]
 
 
-def triar_teoria(linia_subgrup: str, teories: Iterable[str]) -> str | None:
-    """Teoría (grupo TE de la misma asignatura) de la línea `linia_subgrup`; `None` si no hay o es ambigua."""
+def triar_teoria(linia_subgrup: str, teories: Iterable[str], numero_subgrup: str | None = None) -> str | None:
+    """Teoría (grupo TE de la misma asignatura) de un subgrupo, con el criterio del verificador (`check.py`).
+
+    1. La TE de la línea cuyo número es exactamente la línea; si no, la única TE de la línea.
+    2. Si no hay ninguna TE de la línea: la TE con el mismo número que el subgrupo («/challenge H2»:
+       TE/415 y PAUL/415 son el mismo alumnado aunque la línea no lo diga).
+    `None` si no hay candidata o es ambigua.
+    """
+    teories = list(teories)
     de_la_linia = [grup for grup in teories if linia(_TIPUS_TEORIA, grup) == linia_subgrup]
+    if de_la_linia:
+        return _unica_de_la_linia(linia_subgrup, de_la_linia)
+    if numero_subgrup is None:
+        return None
+    mateix_numero = [grup for grup in teories if numero(grup) == numero_subgrup]
+    return mateix_numero[0] if len(mateix_numero) == 1 else None
+
+
+def _unica_de_la_linia(linia_subgrup: str, de_la_linia: list[str]) -> str | None:
     exactes = [grup for grup in de_la_linia if numero(grup) == linia_subgrup]
     if len(exactes) == 1:
         return exactes[0]

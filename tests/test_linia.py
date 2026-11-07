@@ -88,5 +88,22 @@ def test_triar_teoria_amb_linia_calculada_per_a_paul_311() -> None:
     assert triar_teoria(linia("PAUL", "PAUL/311"), ["TE/31", "TE/310"]) == "TE/31"
 
 
-def test_triar_teoria_amb_linia_calculada_per_a_paul_415() -> None:
+def test_triar_teoria_sense_numero_de_subgrup_no_aplica_h2() -> None:
     assert triar_teoria(linia("PAUL", "PAUL/415"), ["TE/415"]) is None
+
+
+def test_triar_teoria_h2_mateix_numero_quan_no_hi_ha_teoria_de_la_linia() -> None:
+    # check.py («/challenge H2»): TE/415 y PAUL/415 son el mismo alumnado aunque la línea no lo diga.
+    assert triar_teoria(linia("PAUL", "PAUL/415"), ["TE/415"], numero_subgrup="415") == "TE/415"
+
+
+def test_triar_teoria_h2_cas_te_321_i_paul_321() -> None:
+    assert triar_teoria(linia("PAUL", "PAUL/321"), ["TE/321"], numero_subgrup="321") == "TE/321"
+
+
+def test_triar_teoria_la_linia_te_prioritat_sobre_h2() -> None:
+    assert triar_teoria("32", ["TE/32", "TE/321"], numero_subgrup="321") == "TE/32"
+
+
+def test_triar_teoria_h2_sense_teoria_del_mateix_numero_retorna_none() -> None:
+    assert triar_teoria(linia("PAUL", "PAUL/921"), ["TE/91"], numero_subgrup="921") is None
