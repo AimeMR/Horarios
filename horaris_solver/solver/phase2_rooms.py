@@ -44,12 +44,28 @@ def _espai_ok(data: TimetableData, session: Session, room_code: str) -> bool:
     return room.kind in _tipus_permesos(data, session)
 
 
-def _candidates(data: TimetableData, session: Session) -> list[str]:
+def _r7_time_unchanged(session: Session, timed: dict[str, Assignment] | None) -> bool:
+    if timed is None or session.id not in timed:
+        return True
+    assignment = timed[session.id]
+    return assignment.day == session.day and assignment.start_min == session.start_min
+
+
+def _candidates(
+    data: TimetableData,
+    session: Session,
+    timed: dict[str, Assignment] | None = None,
+) -> list[str]:
     if session.sense_espai:
         return [""]
     if session.kind == "PLAB" and session.fixed.startswith("R7") and not session.room_partida:
         return [""]
-    if session.fixed.startswith("R7") and session.room_partida:
+    # Keep partida lab only when day/time were not repaired away from partida.
+    if (
+        session.fixed.startswith("R7")
+        and session.room_partida
+        and _r7_time_unchanged(session, timed)
+    ):
         return [session.room_partida]
     out: list[str] = []
     for room in data.rooms.values():
@@ -114,14 +130,18 @@ def _solve_rooms(
     }
 
     for session in needing:
-        candidates = _candidates(data, session)
+        candidates = _candidates(data, session, timed)
         if not candidates:
             return Phase2Result(False, [], "INFEASIBLE", f"no room candidates for {session.id}")
         domain = [room_index[c] for c in candidates]
         session_room[session.id] = model.NewIntVarFromDomain(
             cp_model.Domain.FromValues(domain), f"room_{session.id}"
         )
-        if session.fixed.startswith("R7") and session.room_partida in room_index:
+        if (
+            session.fixed.startswith("R7")
+            and session.room_partida in room_index
+            and _r7_time_unchanged(session, timed)
+        ):
             model.Add(session_room[session.id] == room_index[session.room_partida])
 
     # No room double-booking on overlapping sessions same calendar DATE

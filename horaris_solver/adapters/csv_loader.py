@@ -6,6 +6,7 @@ import csv
 from datetime import date, timedelta
 from pathlib import Path
 
+from horaris_solver.domain.filters import resolve_turn, session_matches_filters
 from horaris_solver.domain.models import (
     Activity,
     CalendarBlock,
@@ -40,7 +41,12 @@ class CsvTimetableSource:
     def __init__(self, paquet: Path) -> None:
         self._paquet = Path(paquet)
 
-    def load(self, semestre: int | None = None) -> TimetableData:
+    def load(
+        self,
+        semestre: int | None = None,
+        cursos: frozenset[str] | None = None,
+        titulacions: frozenset[str] | None = None,
+    ) -> TimetableData:
         paquet = self._paquet
         rooms = {
             row["aula"]: Room(
@@ -69,6 +75,10 @@ class CsvTimetableSource:
             session_date = date.fromisoformat(row["data"])
             if semestre is not None and semestre_de(session_date) != semestre:
                 continue
+            cohorts = _parse_cohorts(row.get("titulacions_curs") or "")
+            if not session_matches_filters(cohorts, cursos=cursos, titulacions=titulacions):
+                continue
+            explicit_turn = (row.get("torn_requerit") or "desconegut").strip()
             sid = row["id_sessio"]
             sessions[sid] = Session(
                 id=sid,
@@ -82,8 +92,8 @@ class CsvTimetableSource:
                 duration_min=int(row["durada_min"]),
                 students=int(row["alumnes"] or 0),
                 room_partida=(row.get("aula_partida") or "").strip(),
-                cohorts=_parse_cohorts(row.get("titulacions_curs") or ""),
-                turn=(row.get("torn_requerit") or "desconegut").strip(),
+                cohorts=cohorts,
+                turn=resolve_turn(cohorts, explicit_turn),
                 fixed=(row.get("fixada") or "").strip(),
                 teachers=_parse_teachers(row.get("docents") or ""),
                 shared_id=(row.get("id_compartida") or "").strip(),
@@ -99,16 +109,17 @@ class CsvTimetableSource:
             by_activity.setdefault(session.activity_id, []).append(session)
         for activity_id, group in by_activity.items():
             first = group[0]
+            cohorts = tuple(sorted({c for s in group for c in s.cohorts}))
             activities[activity_id] = Activity(
                 id=activity_id,
                 code=first.code,
                 kind=first.kind,
                 session_ids=tuple(s.id for s in group),
                 students=max(s.students for s in group),
-                turn=first.turn,
+                turn=resolve_turn(cohorts, first.turn),
                 fixed=first.fixed,
                 teachers=frozenset().union(*(s.teachers for s in group)),
-                cohorts=tuple(sorted({c for s in group for c in s.cohorts})),
+                cohorts=cohorts,
                 duration_min=first.duration_min,
                 sense_espai=first.sense_espai,
             )

@@ -120,7 +120,7 @@ def create_app(
     paquet_roots: list[Path] | None = None,
     max_jobs: int | None = None,
 ) -> FastAPI:
-    output_root = (out_dir or Path("Sort_algorithm/out/jobs")).resolve()
+    output_root = (out_dir or Path("out/jobs")).resolve()
     configured = paquet_roots if paquet_roots is not None else paquet_roots_from_env()
     roots = [p.resolve() for p in configured]
     limit = max_jobs if max_jobs is not None else max_concurrent_jobs()

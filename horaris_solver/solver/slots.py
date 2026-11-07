@@ -5,6 +5,16 @@ from __future__ import annotations
 from horaris_solver.domain.models import MATI, TARDA
 
 
+def start_fits_turn(start: int, duration_min: int, turn: str) -> bool:
+    """True when [start, start+duration] sits entirely inside the required window."""
+    end = start + duration_min
+    if turn == "mati":
+        return MATI[0] <= start and end <= MATI[1]
+    if turn == "tarda":
+        return TARDA[0] <= start and end <= TARDA[1]
+    return (MATI[0] <= start and end <= MATI[1]) or (TARDA[0] <= start and end <= TARDA[1])
+
+
 def slots_for_duration(duration_min: int, turn: str) -> list[int]:
     """Return candidate start minutes that fit entirely in the required window."""
     windows: list[tuple[int, int]]

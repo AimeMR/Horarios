@@ -48,6 +48,11 @@ exclude = [
     '^\.claude/',
 ]
 
+[[tool.mypy.overrides]]
+module = ["ortools", "ortools.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]

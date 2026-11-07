@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from datetime import date
 
 DIES = ("L", "M", "X", "J", "V")
-MATI = (8 * 60 + 30, 14 * 60 + 30)
-TARDA = (14 * 60 + 30, 21 * 60)
+MATI = (8 * 60 + 30, 14 * 60 + 30)  # 08:30–14:30
+TARDA = (15 * 60, 21 * 60)  # 15:00–21:00 (gap 14:30–15:00)
 TIPUS_ORDINARIA = "Aules docents"
 
 

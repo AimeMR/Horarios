@@ -6,6 +6,7 @@ import sqlite3
 from datetime import date, timedelta
 from pathlib import Path
 
+from horaris_solver.domain.filters import resolve_turn, session_matches_filters
 from horaris_solver.domain.models import (
     Activity,
     CalendarBlock,
@@ -34,7 +35,12 @@ class SqliteTimetableSource:
     def __init__(self, db_path: Path) -> None:
         self._db_path = Path(db_path)
 
-    def load(self, semestre: int | None = None) -> TimetableData:
+    def load(
+        self,
+        semestre: int | None = None,
+        cursos: frozenset[str] | None = None,
+        titulacions: frozenset[str] | None = None,
+    ) -> TimetableData:
         if not self._db_path.is_file():
             raise FileNotFoundError(f"SQLite DB not found: {self._db_path}")
 
@@ -43,10 +49,14 @@ class SqliteTimetableSource:
         try:
             conn.execute("PRAGMA foreign_keys = ON")
             rooms = self._load_rooms(conn)
-            sessions, order = self._load_sessions(conn, semestre=semestre)
+            sessions, order = self._load_sessions(
+                conn, semestre=semestre, cursos=cursos, titulacions=titulacions
+            )
             activities = self._build_activities(sessions)
             calendar = self._load_calendar(conn)
-            free_days = self._days_without_class(sessions)
+            # Free days from the full semester calendar, not the curs filter —
+            # otherwise days with only other grades look "empty" and freeze remaps.
+            free_days = self._days_without_class_from_db(conn, semestre=semestre)
         finally:
             conn.close()
 
@@ -85,6 +95,8 @@ class SqliteTimetableSource:
         conn: sqlite3.Connection,
         *,
         semestre: int | None,
+        cursos: frozenset[str] | None = None,
+        titulacions: frozenset[str] | None = None,
     ) -> tuple[dict[str, Session], list[str]]:
         # Cohort list and teachers aggregated per group; session fields from sessio + grup.
         sql = """
@@ -126,6 +138,10 @@ class SqliteTimetableSource:
         sessions: dict[str, Session] = {}
         order: list[str] = []
         for row in rows:
+            cohorts = _parse_cohorts(row["cohorts"])
+            if not session_matches_filters(cohorts, cursos=cursos, titulacions=titulacions):
+                continue
+            explicit_turn = (row["torn_requerit"] or "desconegut").strip()
             sid = row["id_sessio"]
             sessions[sid] = Session(
                 id=sid,
@@ -139,8 +155,8 @@ class SqliteTimetableSource:
                 duration_min=int(row["durada_min"]),
                 students=int(row["alumnes"] or 0),
                 room_partida=(row["aula_partida"] or "").strip(),
-                cohorts=_parse_cohorts(row["cohorts"]),
-                turn=(row["torn_requerit"] or "desconegut").strip(),
+                cohorts=cohorts,
+                turn=resolve_turn(cohorts, explicit_turn),
                 fixed=(row["fixada"] or "").strip(),
                 teachers=_parse_teachers(row["docents"]),
                 shared_id=(row["id_compartida"] or "").strip(),
@@ -158,16 +174,17 @@ class SqliteTimetableSource:
         activities: dict[str, Activity] = {}
         for activity_id, group in by_activity.items():
             first = group[0]
+            cohorts = tuple(sorted({c for s in group for c in s.cohorts}))
             activities[activity_id] = Activity(
                 id=activity_id,
                 code=first.code,
                 kind=first.kind,
                 session_ids=tuple(s.id for s in group),
                 students=max(s.students for s in group),
-                turn=first.turn,
+                turn=resolve_turn(cohorts, first.turn),
                 fixed=first.fixed,
                 teachers=frozenset().union(*(s.teachers for s in group)),
-                cohorts=tuple(sorted({c for s in group for c in s.cohorts})),
+                cohorts=cohorts,
                 duration_min=first.duration_min,
                 sense_espai=first.sense_espai,
             )
@@ -195,8 +212,21 @@ class SqliteTimetableSource:
             )
         return tuple(blocks)
 
-    def _days_without_class(self, sessions: dict[str, Session]) -> frozenset[date]:
-        with_class = {s.session_date for s in sessions.values()}
+    def _days_without_class_from_db(
+        self,
+        conn: sqlite3.Connection,
+        *,
+        semestre: int | None,
+    ) -> frozenset[date]:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT data_partida
+            FROM sessio
+            WHERE (? IS NULL OR semestre = ?)
+            """,
+            (semestre, semestre),
+        ).fetchall()
+        with_class = {date.fromisoformat(row[0]) for row in rows}
         if not with_class:
             return frozenset()
         free: set[date] = set()
