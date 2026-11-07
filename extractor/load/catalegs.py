@@ -4,12 +4,13 @@ Recibe una conexión ya migrada y no abre ni cierra transacciones (lo hace el or
 `CargaError` con el fichero relativo al paquete, la línea y la columna (o la clave del JSON); nunca el valor.
 
 Plan `NOU` del grado nuevo (decisión 2 del plan): no está en `plans.csv`. Si existe
-`escenaris/grau-nou-40/escenari.json`, se crea con la `descripcio` de ese JSON, `fitxer_origen = FITXER_NOU` y
-`data_extraccio = DATA_EXTRACCIO_NOU` (fecha de generación del paquete), y se enlaza con las titulaciones de
-`titulacions_curs` de `FITXER_NOU`.
+`escenaris/grau-nou-40/escenari.json`, se crea con la `descripcio` de ese JSON, `data_extraccio = DATA_EXTRACCIO_NOU`
+(fecha de generación del paquete) y `fitxer_origen` = el fichero que declara su clave `sessions_extra` (en el paquete
+oficial, `FITXER_NOU`; si falta la clave, `CargaError`), y se enlaza con las titulaciones de `titulacions_curs` de ese
+fichero. Los ficheros extra salen de `comu.llegir_escenaris`, igual que en `carregar_escenaris`: un CSV que el JSON no
+declara se ignora.
 """
 
-import json
 import re
 import sqlite3
 from collections.abc import Iterable, Mapping, Sequence
@@ -18,6 +19,7 @@ from pathlib import Path, PurePosixPath
 
 from extractor.csvio import FilaCsv, llegir_csv
 from extractor.errors import CargaError
+from extractor.load.comu import CLAU_SESSIONS_EXTRA, EscenariJson, llegir_escenaris
 from extractor.validacio import CURSOS, TIPUS_AULA, TIPUS_CALENDARI, Validador
 
 FACULTAT: tuple[str, str] = ("EE", "Escola d'Enginyeria (UAB)")
@@ -31,8 +33,6 @@ _FITXER_AULES = "aules.csv"
 _FITXER_PLANS = "plans.csv"
 _FITXER_SESSIONS = "sessions.csv"
 _FITXER_CALENDARI = "calendari.csv"
-_PATRO_SESSIONS_EXTRA = "escenaris/*/sessions_extra.csv"
-_PATRO_ESCENARI = "escenaris/*/escenari.json"
 _ESCENARI_NOU = PurePosixPath(FITXER_NOU).parent.name
 
 _COLUMNES_AULES = ("aula", "edifici", "tipus", "descripcio", "capacitat", "ordinaria")
@@ -64,15 +64,16 @@ class _Escenari:
     nom: str
     ficticia: int
     descripcio: str | None
+    sessions_extra: str | None
 
 
 def carregar_catalegs(conn: sqlite3.Connection, paquet: Path) -> None:
     """Inserta los catálogos del paquete en orden de FK; cualquier dato inválido lanza `CargaError`."""
     plans = _llegir_plans(paquet)
-    cohorts = {fitxer: _llegir_cohorts(paquet, fitxer) for fitxer in _fitxers_sessions(paquet)}
-    escenaris = _llegir_escenaris(paquet)
+    escenaris = [_escenari(escenari) for escenari in llegir_escenaris(paquet)]
+    cohorts = {fitxer: _llegir_cohorts(paquet, fitxer) for fitxer in _fitxers_sessions(escenaris)}
     escenari_nou = next((e for e in escenaris if e.id_escenari == _ESCENARI_NOU), None)
-    titulacions_nou = {tit for tit, _ in cohorts.get(FITXER_NOU, [])} if escenari_nou else set()
+    titulacions_nou = {tit for tit, _ in cohorts[_fitxer_nou(escenari_nou)]} if escenari_nou else set()
 
     _inserir_facultat(conn)
     _inserir_aules(conn, paquet)
@@ -118,9 +119,15 @@ def _llegir_plans(paquet: Path) -> list[_Pla]:
     return plans
 
 
-def _fitxers_sessions(paquet: Path) -> list[str]:
-    extres = sorted(path.relative_to(paquet).as_posix() for path in paquet.glob(_PATRO_SESSIONS_EXTRA))
-    return [_FITXER_SESSIONS, *extres]
+def _fitxers_sessions(escenaris: Sequence[_Escenari]) -> list[str]:
+    """`sessions.csv` y el fichero extra que declara cada escenario (los no declarados se ignoran)."""
+    return [_FITXER_SESSIONS, *(e.sessions_extra for e in escenaris if e.sessions_extra is not None)]
+
+
+def _fitxer_nou(escenari_nou: _Escenari) -> str:
+    if escenari_nou.sessions_extra is None:
+        raise CargaError(escenari_nou.fichero, None, CLAU_SESSIONS_EXTRA, "falta el fichero de sesiones del plan nuevo")
+    return escenari_nou.sessions_extra
 
 
 def _llegir_cohorts(paquet: Path, fitxer: str) -> list[tuple[str, str]]:
@@ -141,37 +148,16 @@ def _cohort(fitxer: str, fila: FilaCsv, element: str) -> tuple[str, str]:
     return titulacio, curs
 
 
-def _llegir_escenaris(paquet: Path) -> list[_Escenari]:
-    fitxers = sorted(paquet.glob(_PATRO_ESCENARI), key=lambda path: path.parent.name)
-    return [_llegir_escenari(paquet, path) for path in fitxers]
-
-
-def _llegir_escenari(paquet: Path, path: Path) -> _Escenari:
-    fichero = path.relative_to(paquet).as_posix()
-    dades = _llegir_json(path, fichero)
+def _escenari(escenari: EscenariJson) -> _Escenari:
+    dades, fichero = escenari.dades, escenari.fichero
     return _Escenari(
-        id_escenari=path.parent.name,
+        id_escenari=escenari.id_escenari,
         fichero=fichero,
         nom=_clau_text(dades, fichero, "nom"),
         ficticia=_clau_bool(dades, fichero, "ficticia"),
         descripcio=_descripcio(dades, fichero),
+        sessions_extra=escenari.sessions_extra,
     )
-
-
-def _llegir_json(path: Path, fichero: str) -> Mapping[str, object]:
-    try:
-        dades: object = json.loads(path.read_text(encoding="utf-8"))
-    except UnicodeDecodeError as error:
-        raise CargaError(fichero, None, None, "el fichero no está en UTF-8") from error
-    except json.JSONDecodeError as error:
-        raise CargaError(fichero, None, None, "el fichero no es un JSON válido") from error
-    except RecursionError as error:
-        raise CargaError(fichero, None, None, "el JSON está demasiado anidado") from error
-    except OSError as error:
-        raise CargaError(fichero, None, None, "no se puede leer el fichero") from error
-    if not isinstance(dades, dict):
-        raise CargaError(fichero, None, None, "el JSON no es un objeto")
-    return dades
 
 
 def _clau(dades: Mapping[str, object], fichero: str, clau: str) -> object:
@@ -278,7 +264,7 @@ def _inserir_plans(conn: sqlite3.Connection, plans: Sequence[_Pla], escenari_nou
     if escenari_nou is not None:
         if escenari_nou.descripcio is None:
             raise CargaError(escenari_nou.fichero, None, "descripcio", "falta la descripción del plan nuevo")
-        files.append((PLA_NOU, escenari_nou.descripcio, FITXER_NOU, DATA_EXTRACCIO_NOU))
+        files.append((PLA_NOU, escenari_nou.descripcio, _fitxer_nou(escenari_nou), DATA_EXTRACCIO_NOU))
     conn.executemany(
         "INSERT INTO pla_estudis (pla, descripcio, fitxer_origen, data_extraccio) VALUES (?, ?, ?, ?)",
         files,

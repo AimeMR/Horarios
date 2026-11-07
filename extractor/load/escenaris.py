@@ -4,7 +4,8 @@ Para cada `escenaris/<dir>/escenari.json` (la fila de `escenari` ya la inserta `
 
 - `sessions_extra` (opcional): nombre de un CSV de la misma carpeta; se carga con `carregar_sessions` y sus sesiones
   llevan `id_escenari = <dir>`. Es lo que aporta el grado nuevo (plan `NOU`, decisión 2 del plan: `pla_estudis` y
-  `pla_titulacio` de `NOU` los crea `carregar_catalegs` a partir de este mismo JSON y de `FITXER_NOU`).
+  `pla_titulacio` de `NOU` los crea `carregar_catalegs` a partir de este mismo JSON). Los JSON y su fichero extra se
+  leen con `comu.llegir_escenaris`, la misma función que usa `carregar_catalegs`.
 - `aules_tancades` → `tancament_aula` (`aula`, `data_ini`, `data_fi`; horas y `motiu` NULL: el JSON no los da).
 - `cancellades` → `cancellacio` (`id_sessio`, `recuperar_fins`).
 - `alumnes` → `canvi_alumnes` (`codi` + `grup` → `id_grup`, `alumnes`).
@@ -13,7 +14,6 @@ Las claves ausentes valen como listas vacías. Recibe una conexión ya migrada y
 errores son `CargaError(<ruta relativa del JSON>, None, <clave de primer nivel>, motiu)`; nunca el valor.
 """
 
-import re
 import sqlite3
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -21,15 +21,10 @@ from pathlib import Path
 
 from extractor.csvio import FilaCsv
 from extractor.errors import CargaError
-from extractor.load.catalegs import _llegir_json
+from extractor.load.comu import EscenariJson, id_grup, llegir_escenaris
 from extractor.load.sessions import carregar_sessions
 from extractor.validacio import Validador
 
-_PATRO_ESCENARI = "escenaris/*/escenari.json"
-_SEPARADOR_ID_GRUP = "·"
-_PATRO_FITXER_CSV = re.compile(r"[A-Za-z0-9_-][A-Za-z0-9._-]{0,127}\.csv")
-
-_CLAU_SESSIONS_EXTRA = "sessions_extra"
 _CLAU_TANCADES = "aules_tancades"
 _CLAU_CANCELLADES = "cancellades"
 _CLAU_ALUMNES = "alumnes"
@@ -86,21 +81,19 @@ class _Escenari:
 
 def carregar_escenaris(conn: sqlite3.Connection, paquet: Path) -> None:
     """Carga cada escenario en orden alfabético de carpeta; cualquier dato inválido lanza `CargaError`."""
-    fitxers = sorted(paquet.glob(_PATRO_ESCENARI), key=lambda path: path.parent.name)
-    for escenari in [_llegir_escenari(paquet, path) for path in fitxers]:
+    for escenari in [_escenari(escenari_json) for escenari_json in llegir_escenaris(paquet)]:
         _carregar_escenari(conn, paquet, escenari)
 
 
 # --- Lectura y validación del JSON ---------------------------------------------------------------------------
 
 
-def _llegir_escenari(paquet: Path, path: Path) -> _Escenari:
-    fichero = path.relative_to(paquet).as_posix()
-    dades = _llegir_json(path, fichero)
+def _escenari(escenari: EscenariJson) -> _Escenari:
+    dades, fichero = escenari.dades, escenari.fichero
     return _Escenari(
-        id_escenari=path.parent.name,
+        id_escenari=escenari.id_escenari,
         fichero=fichero,
-        sessions_extra=_sessions_extra(dades, _Lloc(fichero, _CLAU_SESSIONS_EXTRA)),
+        sessions_extra=escenari.sessions_extra,
         tancaments=_llista(dades, _Lloc(fichero, _CLAU_TANCADES), _tancament),
         cancellacions=_sense_repetits(
             _llista(dades, _Lloc(fichero, _CLAU_CANCELLADES), _cancellacio),
@@ -113,16 +106,6 @@ def _llegir_escenari(paquet: Path, path: Path) -> _Escenari:
             _Lloc(fichero, _CLAU_ALUMNES),
         ),
     )
-
-
-def _sessions_extra(dades: _Element, lloc: _Lloc) -> str | None:
-    """Nombre de un CSV de la carpeta del escenario; nunca una ruta (evita salir de la carpeta)."""
-    valor = dades.get(lloc.clau)
-    if valor is None:
-        return None
-    if not isinstance(valor, str) or not _PATRO_FITXER_CSV.fullmatch(valor):
-        raise lloc.error("se esperaba el nombre de un fichero CSV de la carpeta del escenario")
-    return valor
 
 
 def _llista[T](dades: _Element, lloc: _Lloc, convertir: Callable[[_Element, _Lloc], T]) -> tuple[T, ...]:
@@ -155,8 +138,8 @@ def _cancellacio(element: _Element, lloc: _Lloc) -> _Cancellacio:
 
 
 def _canvi_alumnes(element: _Element, lloc: _Lloc) -> _CanviAlumnes:
-    id_grup = f"{_text(element, lloc, 'codi')}{_SEPARADOR_ID_GRUP}{_text(element, lloc, 'grup')}"
-    return _CanviAlumnes(id_grup=id_grup, alumnes=_enter(element, lloc, "alumnes"))
+    grup = id_grup(_text(element, lloc, "codi"), _text(element, lloc, "grup"))
+    return _CanviAlumnes(id_grup=grup, alumnes=_enter(element, lloc, "alumnes"))
 
 
 def _text(element: _Element, lloc: _Lloc, camp: str) -> str:
@@ -194,8 +177,7 @@ def _sense_repetits[T](elements: tuple[T, ...], clau: Callable[[T], str], lloc: 
 
 def _carregar_escenari(conn: sqlite3.Connection, paquet: Path, escenari: _Escenari) -> None:
     if escenari.sessions_extra is not None:
-        fitxer = f"escenaris/{escenari.id_escenari}/{escenari.sessions_extra}"
-        carregar_sessions(conn, paquet, fitxer, None, id_escenari=escenari.id_escenari)
+        carregar_sessions(conn, paquet, escenari.sessions_extra, None, id_escenari=escenari.id_escenari)
     _comprovar_referencies(conn, escenari)
     conn.executemany(
         _SQL_TANCAMENT,

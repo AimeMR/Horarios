@@ -27,6 +27,8 @@ SESSIONS = "sessions.csv"
 ACTIVITATS = "activitats.csv"
 PROPOSTA = "proposta_partida.csv"
 CONTINGENCIES = "escenaris/contingencies/escenari.json"
+JSON_NOU = "escenaris/grau-nou-40/escenari.json"
+FITXER_NOU = "escenaris/grau-nou-40/sessions_extra.csv"
 
 # Recuentos de ESPERAT.md tras la carga completa (26 tablas de datos).
 ESPERAT: dict[str, int] = {
@@ -97,6 +99,21 @@ def _canvia_escenari(paquet: Path, clau: str, valor: object) -> None:
     fitxer.write_text(json.dumps(dades, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def _renombra_sessions_extra(paquet: Path, nom: str) -> None:
+    """Renombra el CSV del grado nuevo y lo declara con ese nombre en la clave `sessions_extra` de su JSON."""
+    (paquet / FITXER_NOU).rename(paquet / FITXER_NOU.replace("sessions_extra.csv", nom))
+    fitxer = paquet / JSON_NOU
+    dades: dict[str, object] = json.loads(fitxer.read_text(encoding="utf-8"))
+    dades["sessions_extra"] = nom
+    fitxer.write_text(json.dumps(dades, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def _copia_extra_no_declarat(paquet: Path) -> None:
+    """Pone un `sessions_extra.csv` (titulación GZZZ) en contingencies, cuyo JSON no tiene la clave."""
+    desti = paquet / "escenaris" / "contingencies" / "sessions_extra.csv"
+    desti.write_bytes((paquet / FITXER_NOU).read_bytes().replace(b"GNOU", b"GZZZ"))
+
+
 def _afegeix_columna_data(fitxer: Path, data_primera: str) -> None:
     """Añade la columna `data` a la proposta: solo la primera fila (S90001) tiene valor."""
     with fitxer.open(encoding="utf-8-sig", newline="") as lectura:
@@ -155,6 +172,20 @@ def test_sessions_base_no_tenen_escenari(amb_escenaris: sqlite3.Connection) -> N
 
 def test_escenari_sense_sessions_extra_no_carrega_sessions(amb_escenaris: sqlite3.Connection) -> None:
     assert comptar(amb_escenaris, "SELECT COUNT(*) FROM sessio WHERE id_escenari = ?", ("contingencies",)) == 0
+
+
+def test_sessions_extra_amb_un_altre_nom_es_carrega_igual(copia_paquet: Path, conn: sqlite3.Connection) -> None:
+    _renombra_sessions_extra(copia_paquet, "extra.csv")
+    assert carregar(conn, copia_paquet) == ESPERAT
+    assert comptar(conn, "SELECT COUNT(*) FROM sessio WHERE id_escenari = ?", ("grau-nou-40",)) == 6
+
+
+def test_sessions_extra_no_declarat_al_json_signora(copia_paquet: Path, conn: sqlite3.Connection) -> None:
+    _copia_extra_no_declarat(copia_paquet)
+    assert carregar(conn, copia_paquet) == ESPERAT
+    assert comptar(conn, "SELECT COUNT(*) FROM titulacio WHERE codi = ?", ("GZZZ",)) == 0
+    assert comptar(conn, "SELECT COUNT(*) FROM cohort WHERE titulacio = ?", ("GZZZ",)) == 0
+    assert comptar(conn, "SELECT COUNT(*) FROM sessio WHERE id_escenari = ?", ("contingencies",)) == 0
 
 
 def test_carregar_escenaris_no_obre_ni_tanca_la_transaccio(base: sqlite3.Connection, paquet_fals: Path) -> None:
@@ -390,6 +421,40 @@ def test_carregar_amb_reset_recarrega_sense_duplicar(conn: sqlite3.Connection, p
     carregar(conn, paquet_fals)
     assert carregar(conn, paquet_fals, reset=True) == ESPERAT
     assert _recomptes(conn) == ESPERAT
+
+
+def _afegeix_dades_del_solver(conn: sqlite3.Connection, id_partida: int) -> None:
+    """Una versión nueva con referencia a la partida, una asignación, una relajación y un registro de cambio."""
+    id_nova = conn.execute(
+        "INSERT INTO versio_horari (nom, id_versio_referencia) VALUES (?, ?)", ("solver-fals", id_partida)
+    ).lastrowid
+    conn.execute(
+        "INSERT INTO assignacio (id_versio, id_sessio, dia, h_ini, aula) VALUES (?, ?, ?, ?, ?)",
+        (id_nova, "S90001", "X", "10:00", "Q7/7102"),
+    )
+    id_relaxacio = conn.execute(
+        "INSERT INTO relaxacio (id_versio, restriccio, justificacio) VALUES (?, ?, ?)",
+        (id_nova, "R8-RESERVA", "Justificació falsa"),
+    ).lastrowid
+    conn.execute("INSERT INTO relaxacio_sessio (id_relaxacio, id_sessio) VALUES (?, ?)", (id_relaxacio, "S90001"))
+    conn.execute(
+        "INSERT INTO registre_canvi (id_versio_origen, id_versio_desti, id_sessio, de_aula, a_aula, motiu, afectats, "
+        "data_avis) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (id_partida, id_nova, "S90001", "Q7/7101", "Q7/7102", "Motiu fals", "Afectats falsos", "2026-11-07"),
+    )
+
+
+def test_reset_buida_tambe_les_taules_que_escriu_el_solver(conn: sqlite3.Connection, paquet_fals: Path) -> None:
+    carregar(conn, paquet_fals)
+    id_partida = consulta(conn, "SELECT id_versio FROM versio_horari WHERE nom = ?", ("partida",))[0][0]
+    assert isinstance(id_partida, int)
+    _afegeix_dades_del_solver(conn, id_partida)
+    assert comptar(conn, "SELECT COUNT(*) FROM registre_canvi") == 1
+    assert carregar(conn, paquet_fals, reset=True) == ESPERAT
+    assert consulta(conn, "SELECT nom, id_versio_referencia FROM versio_horari") == [("partida", None)]
+    for taula in ("relaxacio", "relaxacio_sessio", "registre_canvi"):
+        assert comptar(conn, f"SELECT COUNT(*) FROM {taula}") == 0, taula  # noqa: S608
+    assert comptar(conn, "SELECT COUNT(*) FROM assignacio WHERE aula = ? AND id_sessio = ?", ("Q7/7102", "S90001")) == 0
 
 
 def test_paquet_amb_error_no_deixa_cap_fila_a_mig(copia_paquet: Path, conn: sqlite3.Connection) -> None:

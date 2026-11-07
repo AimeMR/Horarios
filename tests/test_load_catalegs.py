@@ -15,6 +15,7 @@ from extractor.load.catalegs import carregar_catalegs
 from tests.conftest import afirma_error_carrega, canviar_cella, comptar, consulta
 
 FITXER_NOU = "escenaris/grau-nou-40/sessions_extra.csv"
+JSON_NOU = "escenaris/grau-nou-40/escenari.json"
 EXTERNES = ["J/012", "J/102", "J/124", "B3/0021", "QC/1082"]
 
 
@@ -35,6 +36,18 @@ def _canvia_clau_json(fitxer: Path, clau: str, valor: object) -> None:
     dades: dict[str, object] = json.loads(fitxer.read_text(encoding="utf-8"))
     dades[clau] = valor
     fitxer.write_text(json.dumps(dades, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _renombra_sessions_extra(paquet: Path, nom: str) -> None:
+    """Renombra el CSV del grado nuevo y lo declara con ese nombre en la clave `sessions_extra` de su JSON."""
+    (paquet / FITXER_NOU).rename(paquet / FITXER_NOU.replace("sessions_extra.csv", nom))
+    _canvia_clau_json(paquet / JSON_NOU, "sessions_extra", nom)
+
+
+def _copia_extra_no_declarat(paquet: Path) -> None:
+    """Pone un `sessions_extra.csv` (titulación GZZZ) en contingencies, cuyo JSON no tiene la clave."""
+    desti = paquet / "escenaris" / "contingencies" / "sessions_extra.csv"
+    desti.write_bytes((paquet / FITXER_NOU).read_bytes().replace(b"GNOU", b"GZZZ"))
 
 
 def _treu_columna(fitxer: Path, columna: str) -> None:
@@ -202,6 +215,47 @@ def test_pla_titulacio_separa_el_plus_i_afegeix_nou(carregat: sqlite3.Connection
         ("9004", "GFA"),
         ("NOU", "GNOU"),
     ]
+
+
+def test_sessions_extra_amb_un_altre_nom_crea_titulacio_i_pla_nou(copia_paquet: Path, conn: sqlite3.Connection) -> None:
+    _renombra_sessions_extra(copia_paquet, "extra.csv")
+    carregar_catalegs(conn, copia_paquet)
+    assert comptar(conn, "SELECT COUNT(*) FROM titulacio WHERE codi = ?", ("GNOU",)) == 1
+    assert consulta(conn, "SELECT titulacio FROM pla_titulacio WHERE pla = ?", ("NOU",)) == [("GNOU",)]
+    assert consulta(conn, "SELECT fitxer_origen FROM pla_estudis WHERE pla = ?", ("NOU",)) == [
+        ("escenaris/grau-nou-40/extra.csv",)
+    ]
+
+
+def test_sessions_extra_no_declarat_al_json_signora(copia_paquet: Path, conn: sqlite3.Connection) -> None:
+    _copia_extra_no_declarat(copia_paquet)
+    carregar_catalegs(conn, copia_paquet)
+    assert comptar(conn, "SELECT COUNT(*) FROM titulacio WHERE codi = ?", ("GZZZ",)) == 0
+    assert comptar(conn, "SELECT COUNT(*) FROM titulacio") == 5
+
+
+def test_grau_nou_sense_sessions_extra_falla_amb_la_clau(copia_paquet: Path, conn: sqlite3.Connection) -> None:
+    fitxer = copia_paquet / JSON_NOU
+    dades: dict[str, object] = json.loads(fitxer.read_text(encoding="utf-8"))
+    del dades["sessions_extra"]
+    fitxer.write_text(json.dumps(dades, ensure_ascii=False, indent=2), encoding="utf-8")
+    with pytest.raises(CargaError) as error:
+        carregar_catalegs(conn, copia_paquet)
+    afirma_error_carrega(error.value, JSON_NOU, None, "sessions_extra", "grau-nou-40/sessions_extra.csv")
+
+
+@pytest.mark.parametrize(
+    "valor",
+    ["../../sessions.csv", "sub/extra.csv", "extra.txt", ".csv", 7],
+    ids=["recorregut", "subcarpeta", "no-csv", "sense-nom", "no-text"],
+)
+def test_sessions_extra_que_no_es_un_nom_de_csv_falla(
+    copia_paquet: Path, conn: sqlite3.Connection, valor: object
+) -> None:
+    _canvia_clau_json(copia_paquet / JSON_NOU, "sessions_extra", valor)
+    with pytest.raises(CargaError) as error:
+        carregar_catalegs(conn, copia_paquet)
+    afirma_error_carrega(error.value, JSON_NOU, None, "sessions_extra", str(valor))
 
 
 def test_data_extraccio_mal_formada_falla(copia_paquet: Path, conn: sqlite3.Connection) -> None:

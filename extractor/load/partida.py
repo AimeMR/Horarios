@@ -11,6 +11,7 @@ from pathlib import Path
 
 from extractor.csvio import FilaCsv, llegir_csv
 from extractor.errors import CargaError
+from extractor.load.comu import codis
 from extractor.validacio import DIES, Validador
 
 NOM_PARTIDA: str = "partida"
@@ -51,8 +52,8 @@ def carregar_partida(conn: sqlite3.Connection, paquet: Path) -> int:
 
 def _llegir_assignacions(conn: sqlite3.Connection, paquet: Path) -> list[_Assignacio]:
     referencies = _Referencies(
-        sessions=_codis(conn, "SELECT id_sessio FROM sessio"),
-        aules=_codis(conn, "SELECT codi FROM aula"),
+        sessions=codis(conn, "SELECT id_sessio FROM sessio"),
+        aules=codis(conn, "SELECT codi FROM aula"),
     )
     validador = Validador(_FITXER)
     vistes: set[str] = set()
@@ -96,8 +97,3 @@ def _inserir_versio(conn: sqlite3.Connection) -> int:
     if id_versio is None:
         raise CargaError(_FITXER, None, None, "no se ha podido crear la versión partida")
     return id_versio
-
-
-def _codis(conn: sqlite3.Connection, sql: str) -> frozenset[str]:
-    """Primera columna de una consulta fija (sin parámetros) como conjunto de textos."""
-    return frozenset(str(fila[0]) for fila in conn.execute(sql))
