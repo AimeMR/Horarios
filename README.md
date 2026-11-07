@@ -88,6 +88,55 @@ Códigos de salida:
 | 1 | `verificar` ha terminado y el veredicto es `NO VALIDA` |
 | 2 | Error (ruta que falta, BD ya cargada, versión que no existe...). El mensaje sale por stderr |
 
+## Backend (API de lectura)
+
+API HTTP en Node (`backend/`) que sirve la BD SQLite que crea el extractor. Es **solo de lectura**, no tiene
+autenticación y escucha en `127.0.0.1` por defecto, con CORS limitado a un único origen. No la expongas a una red.
+
+Requisitos: Node 22 y npm. Los tests también necesitan uv, porque construyen una BD con el extractor a partir de los
+datos falsos de `tests/fixtures/`.
+
+```bash
+cd backend
+npm ci
+```
+
+Primero crea la BD con el extractor (ver "Puesta en marcha") y apunta `HORARIS_DB` a ella:
+
+```powershell
+# PowerShell
+$env:HORARIS_DB = "..\horaris.db"
+npm run dev
+```
+
+```bash
+# Git Bash
+export HORARIS_DB=../horaris.db
+npm run dev
+```
+
+Para producción local: `npm run build && npm start`. Los tests: `npm test`.
+
+| Variable | Qué es | Por defecto |
+|---|---|---|
+| `HORARIS_DB` | Fichero SQLite que se lee (obligatoria) | - |
+| `HOST` | Dirección donde escucha | `127.0.0.1` |
+| `PORT` | Puerto | `3000` |
+| `CORS_ORIGIN` | Único origen permitido por CORS | `http://localhost:5173` |
+| `LOG_LEVEL` | Nivel de log | `info` |
+
+Endpoints (todos `GET`):
+
+| Ruta | Parámetros |
+|---|---|
+| `/health` | - |
+| `/aules` | `tipus`, `capacitat_min`, `limit`, `offset` |
+| `/versions` | `limit`, `offset` |
+| `/versions/:id/assignacions` | `limit`, `offset` |
+| `/versions/:id/informe` | - |
+| `/versions/:id/parrilla` | `setmana` y al menos uno de `aula`, `cohort`, `profe`, `assignatura`, `grup` |
+| `/versions/:id/ocupacio` | `setmana`, `tipus` |
+
 ## Qué se sube y qué no
 
 Los datos del paquete están **pseudonimizados, no anonimizados**: se pueden volver a asociar a personas. Por eso
