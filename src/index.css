@@ -368,6 +368,117 @@ body {
   outline: none;
 }
 
+/* Tarjeta y controles del filtro por semanas completas */
+.week-highlight-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.week-highlight-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.week-highlight-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #0369a1;
+}
+
+.link-clear-week-btn {
+  background: none;
+  border: none;
+  color: #0284c7;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.link-clear-week-btn:hover {
+  color: #0369a1;
+}
+
+.week-highlight-dates {
+  font-size: 0.75rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.week-days-visual-track {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.week-day-track-pill {
+  flex: 1;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 4px 2px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.day-track-name {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+}
+
+.day-track-date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.week-quick-nav-bar {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.quick-week-btn {
+  flex: 1;
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 6px 4px;
+  font-family: inherit;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.quick-week-btn:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.quick-week-btn.current-week-btn {
+  background-color: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
 .form-control:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
@@ -973,13 +1084,28 @@ body {
   font-weight: 700;
   font-size: 0.75rem;
   text-align: center;
-  padding: 6px 4px;
+  padding: 5px 4px;
   border: 1px solid #cbd5e1;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   position: sticky;
   top: 0;
   z-index: 10;
+}
+
+.th-day-name {
+  font-weight: 700;
+  font-size: 0.78125rem;
+  line-height: 1.15;
+}
+
+.th-day-date {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #0284c7;
+  letter-spacing: 0;
+  margin-top: 1px;
 }
 
 .excel-th-time {

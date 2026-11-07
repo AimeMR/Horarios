@@ -12,7 +12,7 @@ export default function App() {
 
   // Filtros de trabajo del formulario en la barra lateral
   const [filters, setFilters] = useState({
-    date: '',
+    week: '2026-W45',
     degree: '',
     course: '',
     subject: '',
@@ -36,7 +36,7 @@ export default function App() {
 
   const handleResetFilters = () => {
     const emptyFilters = {
-      date: '',
+      week: '2026-W45',
       degree: '',
       course: '',
       subject: '',

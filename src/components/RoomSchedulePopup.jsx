@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getRoomSchedule } from '../services/scheduleService';
-import { matchesSessionFilter, hasActiveFilters } from '../services/scheduleFilterService';
+import { matchesSessionFilter, hasActiveFilters, getWeekInfo } from '../services/scheduleFilterService';
 
 const DAYS = [
   { key: 'L', label: 'Lunes' },
@@ -118,6 +118,10 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
     };
   }, [room, onClose]);
 
+  // Información de la semana seleccionada para mostrar fechas y cabeceras exactas
+  const selectedWeek = appliedFilters?.week || scheduleData?.setmana || '2026-W45';
+  const weekInfo = useMemo(() => getWeekInfo(selectedWeek), [selectedWeek]);
+
   // Asignación dinámica, única y determinista de colores por asignatura para este horario
   const subjectThemeMap = useMemo(() => {
     if (!scheduleData?.items) return {};
@@ -216,7 +220,9 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
               )}
             </div>
             <h2 className="modal-title">Horario Semanal</h2>
-            <span className="modal-subtitle">Lunes a Viernes • 08:30 a 21:00</span>
+            <span className="modal-subtitle">
+              {weekInfo ? `Semana ${weekInfo.week} (${weekInfo.rangeLabel}) • Lunes a Viernes` : 'Lunes a Viernes • 08:30 a 21:00'}
+            </span>
           </div>
 
           <button
@@ -242,11 +248,15 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
               <thead>
                 <tr>
                   <th className="excel-th excel-th-time">Hora</th>
-                  {DAYS.map((day) => (
-                    <th key={day.key} className="excel-th excel-th-day">
-                      {day.label}
-                    </th>
-                  ))}
+                  {DAYS.map((day, idx) => {
+                    const dayDate = weekInfo?.days?.[idx]?.shortDate;
+                    return (
+                      <th key={day.key} className="excel-th excel-th-day">
+                        <div className="th-day-name">{day.label}</div>
+                        {dayDate && <div className="th-day-date">{dayDate}</div>}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>

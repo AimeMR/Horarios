@@ -40,11 +40,110 @@ export const FLOOR_ROOMS = {
 };
 
 /**
+ * Obtiene información detallada de una semana ISO (YYYY-Www):
+ * - Año y número de semana
+ * - Fecha del Lunes y del Viernes
+ * - Lista de los 5 días lectivos (Lunes a Viernes)
+ * - Etiquetas formateadas para interfaz
+ */
+export function getWeekInfo(weekStr) {
+  if (!weekStr) return null;
+  const match = String(weekStr).trim().match(/^(\d{4})-W(\d{2})$/);
+  if (!match) return null;
+
+  const year = parseInt(match[1], 10);
+  const week = parseInt(match[2], 10);
+
+  // El 4 de enero siempre cae dentro de la semana 1 según la norma ISO 8601
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const dayOfWeek = jan4.getUTCDay() || 7; // 1 = Lunes, 7 = Domingo
+  const mondayWeek1 = new Date(jan4.getTime() - (dayOfWeek - 1) * 86400000);
+  const targetMonday = new Date(mondayWeek1.getTime() + (week - 1) * 7 * 86400000);
+
+  const dayNames = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+  const dayKeys = ['L', 'M', 'X', 'J', 'V'];
+  const days = [];
+
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(targetMonday.getTime() + i * 86400000);
+    const dateStr = d.toISOString().split('T')[0];
+    const parts = dateStr.split('-');
+    const shortFormatted = `${parts[2]}/${parts[1]}`;
+    days.push({
+      key: dayKeys[i],
+      name: dayNames[i],
+      date: dateStr,
+      shortDate: shortFormatted,
+      fullLabel: `${dayNames[i]} (${shortFormatted})`
+    });
+  }
+
+  const mondayStr = days[0].date;
+  const fridayStr = days[4].date;
+  const rangeLabel = `${days[0].shortDate} – ${days[4].shortDate}`;
+  const badgeLabel = `Sem. ${week} (${rangeLabel})`;
+
+  return {
+    year,
+    week,
+    isoWeek: weekStr,
+    monday: mondayStr,
+    friday: fridayStr,
+    rangeLabel,
+    badgeLabel,
+    days
+  };
+}
+
+/**
+ * Calcula la semana siguiente o anterior sumando el desplazamiento de semanas.
+ */
+export function getAdjacentWeek(weekStr, offset = 1) {
+  const current = getWeekInfo(weekStr) || getWeekInfo('2026-W45');
+  const targetMonday = new Date(`${current.monday}T12:00:00Z`);
+  targetMonday.setUTCDate(targetMonday.getUTCDate() + offset * 7);
+
+  const target = new Date(Date.UTC(targetMonday.getUTCFullYear(), targetMonday.getUTCMonth(), targetMonday.getUTCDate()));
+  const dayNr = (target.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);
+  const firstThursday = target.getTime();
+  target.setUTCMonth(0, 1);
+  if (target.getUTCDay() !== 4) {
+    target.setUTCMonth(0, 1 + ((4 - target.getUTCDay()) + 7) % 7);
+  }
+  const weekNum = 1 + Math.ceil((firstThursday - target.getTime()) / 604800000);
+  const yearNum = new Date(firstThursday).getUTCFullYear();
+  return `${yearNum}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+/**
+ * Catálogo de semanas del cuatrimestre universitario (Septiembre - Enero)
+ */
+export const SEMESTER_WEEKS = [
+  { isoWeek: '2026-W38', label: 'Semana 38 (14/09 – 18/09)' },
+  { isoWeek: '2026-W39', label: 'Semana 39 (21/09 – 25/09)' },
+  { isoWeek: '2026-W40', label: 'Semana 40 (28/09 – 02/10)' },
+  { isoWeek: '2026-W41', label: 'Semana 41 (05/10 – 09/10)' },
+  { isoWeek: '2026-W42', label: 'Semana 42 (12/10 – 16/10)' },
+  { isoWeek: '2026-W43', label: 'Semana 43 (19/10 – 23/10)' },
+  { isoWeek: '2026-W44', label: 'Semana 44 (26/10 – 30/10)' },
+  { isoWeek: '2026-W45', label: 'Semana 45 (02/11 – 06/11) · Actual' },
+  { isoWeek: '2026-W46', label: 'Semana 46 (09/11 – 13/11)' },
+  { isoWeek: '2026-W47', label: 'Semana 47 (16/11 – 20/11)' },
+  { isoWeek: '2026-W48', label: 'Semana 48 (23/11 – 27/11)' },
+  { isoWeek: '2026-W49', label: 'Semana 49 (30/11 – 04/12)' },
+  { isoWeek: '2026-W50', label: 'Semana 50 (07/12 – 11/12)' },
+  { isoWeek: '2026-W51', label: 'Semana 51 (14/12 – 18/12)' },
+  { isoWeek: '2026-W52', label: 'Semana 52 (21/12 – 25/12)' }
+];
+
+/**
  * Comprueba si hay al menos un filtro activo.
  */
 export function hasActiveFilters(filters) {
   if (!filters) return false;
   return Boolean(
+    (filters.week && String(filters.week).trim() !== '') ||
     (filters.date && String(filters.date).trim() !== '') ||
     (filters.degree && String(filters.degree).trim() !== '') ||
     (filters.course && String(filters.course).trim() !== '') ||
@@ -84,8 +183,22 @@ export function matchesSessionFilter(session, filters) {
   if (!session) return false;
   if (!hasActiveFilters(filters)) return true;
 
-  // 1. FILTRO DE FECHA (DÍA CONCRETO)
-  if (filters.date && String(filters.date).trim() !== '') {
+  // 1. FILTRO DE SEMANA LECTIVA (semana entera de Lunes a Viernes)
+  const targetWeek = filters.week || (filters.date?.includes('-W') ? filters.date : null);
+  if (targetWeek && String(targetWeek).trim() !== '') {
+    const weekInfo = getWeekInfo(String(targetWeek).trim());
+    if (weekInfo) {
+      const sessionDate = session.data || '';
+      const inDateRange = sessionDate >= weekInfo.monday && sessionDate <= weekInfo.friday;
+      const inIsoWeek = session.setmana === weekInfo.isoWeek;
+
+      // Si la sesión no pertenece al rango de lunes a viernes ni a la semana ISO
+      if (!inDateRange && !inIsoWeek) {
+        return false;
+      }
+    }
+  } else if (filters.date && String(filters.date).trim() !== '') {
+    // Modo de compatibilidad si se proporciona una fecha puntual
     const targetDate = String(filters.date).trim();
     const diaTarget = getDiaCode(targetDate);
 
