@@ -1,0 +1,5 @@
+pla,titulacions,descripcio,fitxer_origen,data_extraccio
+9001,GFA,Grau fictici A,extracte-fals-9001.csv,30/10/2026
+9002,GFB+GFC,"Grau fictici B i C (pla 9002, 1r i 2n)",extracte-fals-9002.csv,30/10/2026
+9003,MFA,Màster fictici A,extracte-fals-9003.csv,03/11/2026
+9004,GFA,"Grau fictici A (pla 9004, 3r i 4t)",extracte-fals-9004.csv,03/11/2026

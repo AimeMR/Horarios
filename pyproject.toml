@@ -1,0 +1,61 @@
+[project]
+name = "horaris-extractor"
+version = "0.1.0"
+description = "CLI que aplica migraciones SQLite, carga los CSV del paquete y exporta propuestas de horario."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+extractor = "extractor.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "extractor"
+module-root = ""
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["repte-horaris-escola"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "PLW1514"]
+# PLW1514 (open sin encoding) es una regla preview: se activa solo ella, no el resto de preview.
+preview = true
+explicit-preview-rules = true
+
+[tool.ruff.lint.isort]
+# Paquete propio declarado explícitamente: el orden de imports no depende de la caché ni de si el módulo ya existe.
+known-first-party = ["extractor"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+exclude = [
+    '^repte-horaris-escola/',
+    '^\.venv/',
+    '^\.agentic/',
+    '^\.claude/',
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv", "repte-horaris-escola"]
+
+[dependency-groups]
+dev = [
+    "bandit==1.9.4",
+    "mypy==2.4.1",
+    "pytest==9.2.0",
+    "ruff==0.17.4",
+]

@@ -1,0 +1,35 @@
+{
+  "nom": "contingencies",
+  "ficticia": true,
+  "descripcio": [
+    "(a) L'aula Q8/8103 es reserva per a un acte fictici del 2027-01-11 al 2027-01-18: hi ha classes a recol·locar.",
+    "(b) El grup TE/81 de l'Assignatura Falsa 1 passa de 50 a 70 alumnes.",
+    "(c) La sessió de TE/31 del 2026-09-22 es cancel·la i s'ha de recuperar com a molt tard el 2026-10-30.",
+    "(d) Avaria fictícia: la sala Q7/7101 no es pot fer servir el 2026-09-16."
+  ],
+  "aules_tancades": [
+    {
+      "aula": "Q8/8103",
+      "data_ini": "2027-01-11",
+      "data_fi": "2027-01-18"
+    },
+    {
+      "aula": "Q7/7101",
+      "data_ini": "2026-09-16",
+      "data_fi": "2026-09-16"
+    }
+  ],
+  "alumnes": [
+    {
+      "codi": "900001",
+      "grup": "TE/81",
+      "alumnes": 70
+    }
+  ],
+  "cancellades": [
+    {
+      "id_sessio": "S90014",
+      "recuperar_fins": "2026-10-30"
+    }
+  ]
+}
