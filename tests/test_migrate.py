@@ -12,10 +12,10 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from extractor.migrate import DIR_MIGRACIONS, Migracio, baixar, descobrir, pujar, versions_aplicades
 
 from extractor.db import connect
 from extractor.errors import MigracioError
+from extractor.migrate import DIR_MIGRACIONS, Migracio, baixar, descobrir, pujar, versions_aplicades
 
 FIXTURES_VALIDES = Path(__file__).resolve().parent / "fixtures" / "migrations" / "valides"
 

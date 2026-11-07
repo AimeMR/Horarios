@@ -10,8 +10,8 @@ from contextlib import closing
 from pathlib import Path
 
 import pytest
-from extractor.__main__ import main
 
+from extractor.__main__ import main
 from extractor.db import connect
 from tests.conftest import comptar, consulta
 

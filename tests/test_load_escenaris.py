@@ -12,14 +12,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from extractor.load.escenaris import carregar_escenaris
-from extractor.load.partida import carregar_partida
 
 from extractor.db import connect
 from extractor.errors import CargaError, ExtractorError
 from extractor.export import exportar
 from extractor.load import TAULES_DADES, buidar, carregar, esta_carregada, esta_migrada
 from extractor.load.catalegs import carregar_catalegs
+from extractor.load.escenaris import carregar_escenaris
+from extractor.load.partida import carregar_partida
 from extractor.load.sessions import carregar_sessions
 from tests.conftest import afirma_error_carrega, canviar_cella, comptar, consulta
 

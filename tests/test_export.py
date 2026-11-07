@@ -10,10 +10,10 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from extractor.export import exportar, validar_nom_versio
 
 from extractor.db import connect
 from extractor.errors import ExportError
+from extractor.export import exportar, validar_nom_versio
 from extractor.migrate import DIR_MIGRACIONS, pujar
 
 ID_GRUP = "900001·TE/21"

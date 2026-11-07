@@ -11,11 +11,11 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from extractor.verificador import PATRO_ESCENARI, ResultatVerificacio, verificar
 
 from extractor.db import connect
 from extractor.errors import ExportError, VerificadorError
 from extractor.migrate import DIR_MIGRACIONS, pujar
+from extractor.verificador import PATRO_ESCENARI, ResultatVerificacio, verificar
 
 ID_GRUP = "900001·TE/21"
 DIR_FALS = Path(__file__).resolve().parent / "fixtures" / "verificador_fals"

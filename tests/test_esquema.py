@@ -9,9 +9,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from extractor.migrate import DIR_MIGRACIONS, baixar, descobrir, pujar
 
 from extractor.db import connect
+from extractor.migrate import DIR_MIGRACIONS, baixar, descobrir, pujar
 
 TAULES_USUARI = [
     "activitat",

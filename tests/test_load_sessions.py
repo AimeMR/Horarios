@@ -8,10 +8,10 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from extractor.load.catalegs import carregar_catalegs
-from extractor.load.sessions import carregar_sessions
 
 from extractor.errors import CargaError
+from extractor.load.catalegs import carregar_catalegs
+from extractor.load.sessions import carregar_sessions
 from tests.conftest import afirma_error_carrega, canviar_cella, comptar, consulta
 
 SESSIONS = "sessions.csv"

@@ -28,6 +28,10 @@ select = ["E", "F", "I", "B", "UP", "S", "PLW1514"]
 preview = true
 explicit-preview-rules = true
 
+[tool.ruff.lint.isort]
+# Paquete propio declarado explícitamente: el orden de imports no depende de la caché ni de si el módulo ya existe.
+known-first-party = ["extractor"]
+
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101"]
 
