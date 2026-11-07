@@ -1,0 +1,418 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3500 2500" width="3500" height="2500" id="svg-floor-1">
+  <defs>
+    <style>
+      .bg { fill: #FFFFFF; }
+      .wall { fill: #FFFFFF; stroke: #111827; stroke-width: 4.5; stroke-linejoin: miter; stroke-linecap: square; }
+      .wall-thick { fill: #FFFFFF; stroke: #111827; stroke-width: 5.5; stroke-linejoin: miter; stroke-linecap: square; }
+      .corridor-bound { fill: none; stroke: #111827; stroke-width: 4.5; stroke-linejoin: miter; stroke-linecap: square; }
+      .room-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; text-anchor: middle; dominant-baseline: central; letter-spacing: 0.5px; pointer-events: none; user-select: none; }
+      .room-label-vert { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 21px; font-weight: 700; fill: #111827; text-anchor: middle; dominant-baseline: central; letter-spacing: 0.5px; pointer-events: none; user-select: none; }
+      .corridor-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 20px; font-weight: 600; fill: #6B7280; text-anchor: middle; dominant-baseline: central; letter-spacing: 4px; pointer-events: none; user-select: none; }
+      .entry-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; letter-spacing: 2px; pointer-events: none; user-select: none; }
+      .arrow { stroke: #111827; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+      /* ==========================================
+         ESTILOS DE INTERACTIVIDAD (CLICKABLE BLOCKS)
+         ========================================== */
+      .room {
+        cursor: pointer;
+        outline: none;
+      }
+      .room rect,
+      .room-clickable {
+        cursor: pointer;
+        transition: fill 0.18s ease, stroke 0.18s ease, stroke-width 0.18s ease;
+      }
+      .room:hover rect,
+      .room:focus-visible rect,
+      .room-clickable:hover {
+        fill: #E0F2FE !important;
+        stroke: #0284C7 !important;
+        stroke-width: 6 !important;
+      }
+      .room:hover text,
+      .room:focus-visible text {
+        fill: #0284C7 !important;
+      }
+      .room.is-selected rect,
+      .room-clickable.is-selected {
+        fill: #BAE6FD !important;
+        stroke: #0369A1 !important;
+        stroke-width: 7 !important;
+      }
+      .room.is-selected text {
+        fill: #0369A1 !important;
+      }
+    </style>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="3500" height="2500" class="bg" />
+
+  <!-- ==================== ACCESO Y PASILLO OESTE ==================== -->
+  <!-- Entrada -->
+  <g id="access-entry">
+    <line x1="720" y1="1100" x2="720" y2="1175" class="arrow" />
+    <path d="M 710 1160 L 720 1175 L 730 1160" class="arrow" />
+    <text x="695" y="1145" class="entry-text" text-anchor="end">ENTRY</text>
+  </g>
+
+  <!-- Límites del Pasillo de Acceso Principal (Largo hacia el oeste) -->
+  <path d="M 280 1200 L 700 1200" class="corridor-bound" />
+  <path d="M 740 1200 L 820 1200" class="corridor-bound" />
+  <path d="M 280 1200 L 280 1460 L 1420 1460" class="corridor-bound" />
+  
+  <!-- Pasillo vertical del bloque oeste (Q1-Q4) -->
+  <path d="M 820 1200 L 820 280 L 940 280" class="corridor-bound" />
+  <path d="M 820 1200 L 1480 1200" class="corridor-bound" />
+
+  <!-- ==================== BLOQUE OESTE (Q1 / Q2 / Q3 / Q4) ==================== -->
+  <!-- Fila Q4 -->
+  <g id="block-q4">
+    <g class="room" id="room-q4-0003" data-room="Q4/0003" tabindex="0" role="button" aria-label="Aula Q4/0003">
+      <title>Aula Q4/0003</title>
+      <rect x="940" y="280" width="160" height="150" class="wall room-rect" />
+      <text x="1020" y="355" class="room-label">Q4/0003</text>
+    </g>
+
+    <g class="room" id="room-q4-0007" data-room="Q4/0007" tabindex="0" role="button" aria-label="Aula Q4/0007">
+      <title>Aula Q4/0007</title>
+      <rect x="1100" y="280" width="170" height="150" class="wall room-rect" />
+      <text x="1185" y="355" class="room-label">Q4/0007</text>
+    </g>
+
+    <g class="room" id="room-q4-0011" data-room="Q4/0011" tabindex="0" role="button" aria-label="Aula Q4/0011">
+      <title>Aula Q4/0011</title>
+      <rect x="1270" y="280" width="170" height="150" class="wall room-rect" />
+      <text x="1355" y="355" class="room-label">Q4/0011</text>
+    </g>
+  </g>
+
+  <!-- Fila Q3 -->
+  <g id="block-q3">
+    <g class="room" id="room-q3-0003" data-room="Q3/0003" tabindex="0" role="button" aria-label="Aula Q3/0003">
+      <title>Aula Q3/0003</title>
+      <rect x="940" y="510" width="160" height="150" class="wall room-rect" />
+      <text x="1020" y="585" class="room-label">Q3/0003</text>
+    </g>
+
+    <g class="room" id="room-q3-0007" data-room="Q3/0007" tabindex="0" role="button" aria-label="Aula Q3/0007">
+      <title>Aula Q3/0007</title>
+      <rect x="1100" y="510" width="170" height="150" class="wall room-rect" />
+      <text x="1185" y="585" class="room-label">Q3/0007</text>
+    </g>
+
+    <g class="room" id="room-q3-0011" data-room="Q3/0011" tabindex="0" role="button" aria-label="Aula Q3/0011">
+      <title>Aula Q3/0011</title>
+      <rect x="1270" y="510" width="170" height="150" class="wall room-rect" />
+      <text x="1355" y="585" class="room-label">Q3/0011</text>
+    </g>
+  </g>
+
+  <!-- Fila Q2 -->
+  <g id="block-q2">
+    <g class="room" id="room-q2-0003" data-room="Q2/0003" tabindex="0" role="button" aria-label="Aula Q2/0003">
+      <title>Aula Q2/0003</title>
+      <rect x="940" y="730" width="150" height="150" class="wall room-rect" />
+      <text x="1015" y="805" class="room-label">Q2/0003</text>
+    </g>
+
+    <g class="room" id="room-q2-0007" data-room="Q2/0007" tabindex="0" role="button" aria-label="Aula Q2/0007">
+      <title>Aula Q2/0007</title>
+      <rect x="1090" y="730" width="70" height="150" class="wall room-rect" />
+      <text x="1125" y="805" class="room-label-vert" transform="rotate(-90 1125 805)">Q2/0007</text>
+    </g>
+
+    <g class="room" id="room-q2-0011" data-room="Q2/0011" tabindex="0" role="button" aria-label="Aula Q2/0011">
+      <title>Aula Q2/0011</title>
+      <rect x="1160" y="730" width="70" height="150" class="wall room-rect" />
+      <text x="1195" y="805" class="room-label-vert" transform="rotate(-90 1195 805)">Q2/0011</text>
+    </g>
+
+    <g class="room" id="room-q2-0013" data-room="Q2/0013" tabindex="0" role="button" aria-label="Aula Q2/0013">
+      <title>Aula Q2/0013</title>
+      <rect x="1230" y="730" width="70" height="150" class="wall room-rect" />
+      <text x="1265" y="805" class="room-label-vert" transform="rotate(-90 1265 805)">Q2/0013</text>
+    </g>
+
+    <g class="room" id="room-q2-0017" data-room="Q2/0017" tabindex="0" role="button" aria-label="Aula Q2/0017">
+      <title>Aula Q2/0017</title>
+      <rect x="1300" y="730" width="70" height="150" class="wall room-rect" />
+      <text x="1335" y="805" class="room-label-vert" transform="rotate(-90 1335 805)">Q2/0017</text>
+    </g>
+
+    <g class="room" id="room-q2-0019" data-room="Q2/0019" tabindex="0" role="button" aria-label="Aula Q2/0019">
+      <title>Aula Q2/0019</title>
+      <rect x="1370" y="730" width="70" height="150" class="wall room-rect" />
+      <text x="1405" y="805" class="room-label-vert" transform="rotate(-90 1405 805)">Q2/0019</text>
+    </g>
+  </g>
+
+  <!-- Fila Q1 -->
+  <g id="block-q1">
+    <g class="room" id="room-q1-0003" data-room="Q1/0003" tabindex="0" role="button" aria-label="Aula Q1/0003">
+      <title>Aula Q1/0003</title>
+      <rect x="940" y="940" width="150" height="140" class="wall room-rect" />
+      <text x="1015" y="1010" class="room-label">Q1/0003</text>
+    </g>
+
+    <g class="room" id="room-q1-0007" data-room="Q1/0007" tabindex="0" role="button" aria-label="Aula Q1/0007">
+      <title>Aula Q1/0007</title>
+      <rect x="1090" y="940" width="140" height="140" class="wall room-rect" />
+      <text x="1160" y="1010" class="room-label">Q1/0007</text>
+    </g>
+
+    <g class="room" id="room-q1-0013" data-room="Q1/0013" tabindex="0" role="button" aria-label="Aula Q1/0013">
+      <title>Aula Q1/0013</title>
+      <rect x="1230" y="940" width="75" height="140" class="wall room-rect" />
+      <text x="1267.5" y="1010" class="room-label-vert" transform="rotate(-90 1267.5 1010)">Q1/0013</text>
+    </g>
+
+    <g class="room" id="room-q1-0019" data-room="Q1/0019" tabindex="0" role="button" aria-label="Aula Q1/0019">
+      <title>Aula Q1/0019</title>
+      <rect x="1305" y="940" width="135" height="140" class="wall room-rect" />
+      <text x="1372.5" y="1010" class="room-label">Q1/0019</text>
+    </g>
+  </g>
+
+  <!-- ==================== BLOQUE CENTRAL SUPERIOR (Q5 / Q6) ==================== -->
+  <!-- Módulo Q6 -->
+  <g id="block-q6">
+    <rect x="1480" y="580" width="120" height="150" class="wall" />
+    <text x="1540" y="655" class="corridor-label">CORRIDOR</text>
+
+    <g class="room" id="room-q6-0006" data-room="Q6/0006" tabindex="0" role="button" aria-label="Aula Q6/0006">
+      <title>Aula Q6/0006</title>
+      <rect x="1600" y="580" width="260" height="150" class="wall room-rect" />
+      <text x="1730" y="655" class="room-label">Q6/0006</text>
+    </g>
+  </g>
+
+  <!-- Módulo Q5 -->
+  <g id="block-q5">
+    <!-- Sala Q5/0003 -->
+    <g class="room" id="room-q5-0003" data-room="Q5/0003" tabindex="0" role="button" aria-label="Aula Q5/0003">
+      <title>Aula Q5/0003</title>
+      <rect x="1480" y="780" width="220" height="100" class="wall room-rect" />
+      <text x="1590" y="830" class="room-label">Q5/0003</text>
+    </g>
+
+    <!-- Pasillo interno de Q5 -->
+    <rect x="1480" y="880" width="220" height="70" class="wall" />
+    <text x="1590" y="915" class="corridor-label">CORRIDOR</text>
+
+    <!-- Sala Q5/0004 -->
+    <g class="room" id="room-q5-0004" data-room="Q5/0004" tabindex="0" role="button" aria-label="Aula Q5/0004">
+      <title>Aula Q5/0004</title>
+      <rect x="1700" y="780" width="160" height="170" class="wall room-rect" />
+      <text x="1785" y="865" class="room-label">Q5/0004</text>
+    </g>
+  </g>
+
+  <!-- ==================== ALA CENTRAL (QC) ==================== -->
+  <!-- Fila Superior QC -->
+  <g id="block-qc-top">
+    <g class="room" id="room-qc-0067" data-room="QC/0067" tabindex="0" role="button" aria-label="Aula QC/0067">
+      <title>Aula QC/0067</title>
+      <rect x="1510" y="1200" width="240" height="120" class="wall room-rect" />
+      <text x="1630" y="1260" class="room-label">QC/0067</text>
+    </g>
+
+    <g class="room" id="room-qc-0075" data-room="QC/0075" tabindex="0" role="button" aria-label="Aula QC/0075">
+      <title>Aula QC/0075</title>
+      <rect x="1750" y="1200" width="170" height="120" class="wall room-rect" />
+      <text x="1835" y="1260" class="room-label">QC/0075</text>
+    </g>
+
+    <g class="room" id="room-qc-0081" data-room="QC/0081" tabindex="0" role="button" aria-label="Aula QC/0081">
+      <title>Aula QC/0081</title>
+      <rect x="1920" y="1200" width="80" height="120" class="wall room-rect" />
+      <text x="1960" y="1260" class="room-label-vert" transform="rotate(-90 1960 1260)">QC/0081</text>
+    </g>
+
+    <g class="room" id="room-qc-0085" data-room="QC/0085" tabindex="0" role="button" aria-label="Aula QC/0085">
+      <title>Aula QC/0085</title>
+      <rect x="2000" y="1200" width="150" height="120" class="wall room-rect" />
+      <text x="2075" y="1260" class="room-label">QC/0085</text>
+    </g>
+
+    <g class="room" id="room-qc-0089" data-room="QC/0089" tabindex="0" role="button" aria-label="Aula QC/0089">
+      <title>Aula QC/0089</title>
+      <rect x="2150" y="1200" width="150" height="120" class="wall room-rect" />
+      <text x="2225" y="1260" class="room-label">QC/0089</text>
+    </g>
+
+    <g class="room" id="room-qc-0091" data-room="QC/0091" tabindex="0" role="button" aria-label="Aula QC/0091">
+      <title>Aula QC/0091</title>
+      <rect x="2300" y="1200" width="80" height="120" class="wall room-rect" />
+      <text x="2340" y="1260" class="room-label-vert" transform="rotate(-90 2340 1260)">QC/0091</text>
+    </g>
+
+    <g class="room" id="room-qc-0107" data-room="QC/0107" tabindex="0" role="button" aria-label="Aula QC/0107">
+      <title>Aula QC/0107</title>
+      <rect x="2380" y="1200" width="200" height="120" class="wall room-rect" />
+      <text x="2480" y="1260" class="room-label">QC/0107</text>
+    </g>
+
+    <g class="room" id="room-qc-0109" data-room="QC/0109" tabindex="0" role="button" aria-label="Aula QC/0109">
+      <title>Aula QC/0109</title>
+      <rect x="2580" y="1200" width="80" height="120" class="wall room-rect" />
+      <text x="2620" y="1260" class="room-label-vert" transform="rotate(-90 2620 1260)">QC/0109</text>
+    </g>
+
+    <!-- QC/0113 de doble altura en la esquina este -->
+    <g class="room" id="room-qc-0113" data-room="QC/0113" tabindex="0" role="button" aria-label="Aula QC/0113">
+      <title>Aula QC/0113</title>
+      <rect x="2660" y="1200" width="160" height="260" class="wall room-rect" />
+      <text x="2740" y="1330" class="room-label-vert" transform="rotate(-90 2740 1330)">QC/0113</text>
+    </g>
+  </g>
+
+  <!-- Fila Inferior QC -->
+  <g id="block-qc-bottom">
+    <g class="room" id="room-qc-0069" data-room="QC/0069" tabindex="0" role="button" aria-label="Aula QC/0069">
+      <title>Aula QC/0069</title>
+      <rect x="1580" y="1340" width="170" height="120" class="wall room-rect" />
+      <text x="1665" y="1400" class="room-label">QC/0069</text>
+    </g>
+
+    <g class="room" id="room-qc-0073" data-room="QC/0073" tabindex="0" role="button" aria-label="Aula QC/0073">
+      <title>Aula QC/0073</title>
+      <rect x="1750" y="1340" width="65" height="120" class="wall room-rect" />
+      <text x="1782.5" y="1400" class="room-label-vert" transform="rotate(-90 1782.5 1400)">QC/0073</text>
+    </g>
+
+    <g class="room" id="room-qc-0077" data-room="QC/0077" tabindex="0" role="button" aria-label="Aula QC/0077">
+      <title>Aula QC/0077</title>
+      <rect x="1815" y="1340" width="65" height="120" class="wall room-rect" />
+      <text x="1847.5" y="1400" class="room-label-vert" transform="rotate(-90 1847.5 1400)">QC/0077</text>
+    </g>
+
+    <g class="room" id="room-qc-0079" data-room="QC/0079" tabindex="0" role="button" aria-label="Aula QC/0079">
+      <title>Aula QC/0079</title>
+      <rect x="1880" y="1340" width="170" height="120" class="wall room-rect" />
+      <text x="1965" y="1400" class="room-label">QC/0079</text>
+    </g>
+
+    <g class="room" id="room-qc-0083" data-room="QC/0083" tabindex="0" role="button" aria-label="Aula QC/0083">
+      <title>Aula QC/0083</title>
+      <rect x="2050" y="1340" width="140" height="120" class="wall room-rect" />
+      <text x="2120" y="1400" class="room-label">QC/0083</text>
+    </g>
+
+    <g class="room" id="room-qc-0087" data-room="QC/0087" tabindex="0" role="button" aria-label="Aula QC/0087">
+      <title>Aula QC/0087</title>
+      <rect x="2190" y="1340" width="220" height="120" class="wall room-rect" />
+      <text x="2300" y="1400" class="room-label">QC/0087</text>
+    </g>
+
+    <!-- Espacio / Pasaje abierto entre x=2410 y x=2540 -->
+
+    <g class="room" id="room-qc-0111" data-room="QC/0111" tabindex="0" role="button" aria-label="Aula QC/0111">
+      <title>Aula QC/0111</title>
+      <rect x="2540" y="1340" width="120" height="120" class="wall room-rect" />
+      <text x="2600" y="1400" class="room-label">QC/0111</text>
+    </g>
+  </g>
+
+  <!-- ==================== ALA SUR (QP) Y GRAN CORREDOR ==================== -->
+  <!-- Corredor Sur Central -->
+  <g id="south-corridor">
+    <path d="M 1480 1560 L 2430 1560" class="corridor-bound" />
+    <text x="1955" y="1625" class="corridor-label">CORRIDOR</text>
+  </g>
+
+  <!-- Sala nexo QP/0002 -->
+  <g id="block-qp-nexus">
+    <g class="room" id="room-qp-0002" data-room="QP/0002" tabindex="0" role="button" aria-label="Aula QP/0002">
+      <title>Aula QP/0002</title>
+      <rect x="1390" y="1560" width="90" height="130" class="wall room-rect" />
+      <text x="1435" y="1625" class="room-label-vert" transform="rotate(-90 1435 1625)">QP/0002</text>
+    </g>
+  </g>
+
+  <!-- Salas Fila Sur QP -->
+  <g id="block-qp-row">
+    <g class="room" id="room-qp-0003" data-room="QP/0003" tabindex="0" role="button" aria-label="Aula QP/0003">
+      <title>Aula QP/0003</title>
+      <rect x="1390" y="1690" width="220" height="240" class="wall room-rect" />
+      <text x="1500" y="1810" class="room-label">QP/0003</text>
+    </g>
+
+    <g class="room" id="room-qp-0005" data-room="QP/0005" tabindex="0" role="button" aria-label="Aula QP/0005">
+      <title>Aula QP/0005</title>
+      <rect x="1610" y="1690" width="170" height="240" class="wall room-rect" />
+      <text x="1695" y="1810" class="room-label">QP/0005</text>
+    </g>
+
+    <g class="room" id="room-qp-0006" data-room="QP/0006" tabindex="0" role="button" aria-label="Aula QP/0006">
+      <title>Aula QP/0006</title>
+      <rect x="1780" y="1690" width="130" height="240" class="wall room-rect" />
+      <text x="1845" y="1810" class="room-label">QP/0006</text>
+    </g>
+
+    <g class="room" id="room-qp-0007" data-room="QP/0007" tabindex="0" role="button" aria-label="Aula QP/0007">
+      <title>Aula QP/0007</title>
+      <rect x="1910" y="1690" width="70" height="240" class="wall room-rect" />
+      <text x="1945" y="1810" class="room-label-vert" transform="rotate(-90 1945 1810)">QP/0007</text>
+    </g>
+
+    <g class="room" id="room-qp-0008" data-room="QP/0008" tabindex="0" role="button" aria-label="Aula QP/0008">
+      <title>Aula QP/0008</title>
+      <rect x="1980" y="1690" width="200" height="240" class="wall room-rect" />
+      <text x="2080" y="1810" class="room-label">QP/0008</text>
+    </g>
+
+    <g class="room" id="room-qp-0009" data-room="QP/0009" tabindex="0" role="button" aria-label="Aula QP/0009">
+      <title>Aula QP/0009</title>
+      <rect x="2180" y="1690" width="250" height="240" class="wall room-rect" />
+      <text x="2305" y="1810" class="room-label">QP/0009</text>
+    </g>
+
+    <!-- QP/0012 Gran sala este que cierra el pasillo -->
+    <g class="room" id="room-qp-0012" data-room="QP/0012" tabindex="0" role="button" aria-label="Aula QP/0012">
+      <title>Aula QP/0012</title>
+      <rect x="2430" y="1560" width="390" height="370" class="wall room-rect" />
+      <text x="2625" y="1745" class="room-label">QP/0012</text>
+    </g>
+  </g>
+
+  <!-- Script interno para cuando se abre directamente en el navegador o mediante iframe/object -->
+  <script type="text/javascript">
+    <![CDATA[
+    document.addEventListener('DOMContentLoaded', () => {
+      const rooms = document.querySelectorAll('.room');
+      rooms.forEach((room) => {
+        const notifySelection = () => {
+          rooms.forEach(r => r.classList.remove('is-selected'));
+          room.classList.add('is-selected');
+          const roomId = room.getAttribute('data-room') || room.id;
+          
+          // Emitir evento al DOM local
+          const event = new CustomEvent('roomSelected', {
+            bubbles: true,
+            composed: true,
+            detail: { roomId: roomId, floor: 1 }
+          });
+          room.dispatchEvent(event);
+
+          // Comunicar a la ventana padre si está en un iframe u object
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'ROOM_SELECTED', roomId: roomId, floor: 1 }, '*');
+            }
+          } catch(e) {}
+        };
+
+        room.addEventListener('click', notifySelection);
+        room.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            notifySelection();
+          }
+        });
+      });
+    });
+    ]]>
+  </script>
+</svg>

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" width="100%" height="100%" class="floor-svg">
+  <defs>
+    <pattern id="grid3" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background Grid -->
+  <rect width="900" height="600" fill="#ffffff" />
+  <rect width="900" height="600" fill="url(#grid3)" />
+
+  <!-- Building Perimeter -->
+  <rect x="50" y="50" width="800" height="500" rx="8" fill="#f8fafc" stroke="#334155" stroke-width="3"/>
+
+  <!-- Pasillo Central -->
+  <rect x="50" y="260" width="800" height="80" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="450" y="306" font-family="system-ui, sans-serif" font-size="12" fill="#94a3b8" font-weight="600" text-anchor="middle" letter-spacing="3">PASILLO DISTRIBUIDOR (PLANTA 3 - ÁREA DOCENTE)</text>
+
+  <!-- BLOQUE NORTE (Aulas 301 a 303) -->
+  <!-- Aula 301 -->
+  <g class="room" id="room-301" data-room="Aula 301" data-capacity="28">
+    <rect x="60" y="60" width="180" height="190" fill="#ffffff" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="150" y="145" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#1e293b" text-anchor="middle">Aula 301</text>
+    <text x="150" y="170" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Capacidad: 28</text>
+    <rect x="130" y="246" width="40" height="6" fill="#38bdf8"/>
+  </g>
+
+  <!-- Aula 302 -->
+  <g class="room" id="room-302" data-room="Aula 302" data-capacity="28">
+    <rect x="250" y="60" width="180" height="190" fill="#ffffff" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="340" y="145" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#1e293b" text-anchor="middle">Aula 302</text>
+    <text x="340" y="170" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Capacidad: 28</text>
+    <rect x="320" y="246" width="40" height="6" fill="#38bdf8"/>
+  </g>
+
+  <!-- Núcleo Central: Escaleras y Ascensor -->
+  <g id="stairs-3">
+    <rect x="440" y="60" width="120" height="190" fill="#e2e8f0" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="500" y="140" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">Escaleras</text>
+    <line x1="450" y1="160" x2="550" y2="160" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="450" y1="175" x2="550" y2="175" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="450" y1="190" x2="550" y2="190" stroke="#94a3b8" stroke-width="2"/>
+    <line x1="450" y1="205" x2="550" y2="205" stroke="#94a3b8" stroke-width="2"/>
+    <!-- Ascensor -->
+    <rect x="460" y="75" width="80" height="45" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5" rx="2"/>
+    <text x="500" y="103" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#64748b" text-anchor="middle">Ascensor</text>
+  </g>
+
+  <!-- Despachos Departamentales -->
+  <g class="room" id="room-despachos" data-room="Despachos Docentes">
+    <rect x="570" y="60" width="150" height="190" fill="#ffffff" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="645" y="145" font-family="system-ui, sans-serif" font-size="15" font-weight="700" fill="#1e293b" text-anchor="middle">Despachos</text>
+    <text x="645" y="170" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Tutorías 1 a 6</text>
+    <rect x="625" y="246" width="40" height="6" fill="#38bdf8"/>
+  </g>
+
+  <!-- Aseos Planta 3 -->
+  <g id="toilets-3">
+    <rect x="730" y="60" width="110" height="190" fill="#f8fafc" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="785" y="145" font-family="system-ui, sans-serif" font-size="14" font-weight="700" fill="#475569" text-anchor="middle">Aseos</text>
+    <text x="785" y="168" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8" text-anchor="middle">H / M / Adapt.</text>
+    <rect x="745" y="246" width="30" height="6" fill="#38bdf8"/>
+  </g>
+
+  <!-- BLOQUE SUR (Sala de Profesores y Seminario) -->
+  <!-- Sala de Juntas / Profesores -->
+  <g class="room" id="room-sala-profesores" data-room="Sala de Profesores" data-capacity="45">
+    <rect x="60" y="350" width="300" height="190" fill="#ffffff" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="210" y="435" font-family="system-ui, sans-serif" font-size="17" font-weight="700" fill="#1e293b" text-anchor="middle">Sala de Profesores</text>
+    <text x="210" y="460" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Sala Claustro • Sala de Reuniones</text>
+    <rect x="180" y="348" width="50" height="6" fill="#38bdf8"/>
+  </g>
+
+  <!-- Seminario A -->
+  <g class="room" id="room-seminario" data-room="Seminario A" data-capacity="20">
+    <rect x="370" y="350" width="220" height="190" fill="#ffffff" stroke="#475569" stroke-width="2" rx="4"/>
+    <text x="480" y="435" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#1e293b" text-anchor="middle">Seminario A</text>
+    <text x="480" y="460" font-family="system-ui, sans-serif" font-size="12" fill="#64748b" text-anchor="middle">Capacidad: 20 • Proyector</text>
+    <rect x="460" y="348" width="40" height="6" fill="#38bdf8"/>
+  </g>
+
+  <!-- Terraza Exterior / Descanso -->
+  <g id="terrace">
+    <rect x="600" y="350" width="240" height="190" fill="#ecfdf5" stroke="#059669" stroke-width="2" stroke-dasharray="6 3" rx="4"/>
+    <text x="720" y="435" font-family="system-ui, sans-serif" font-size="16" font-weight="700" fill="#065f46" text-anchor="middle">Terraza / Descanso</text>
+    <text x="720" y="460" font-family="system-ui, sans-serif" font-size="12" fill="#047857" text-anchor="middle">Área Exterior Abierta</text>
+    <rect x="620" y="348" width="40" height="6" fill="#10b981"/>
+  </g>
+
+  <!-- Badge Indicador de Piso -->
+  <g transform="translate(70, 70)">
+    <rect width="64" height="26" rx="4" fill="#0284c7" fill-opacity="0.12" stroke="#0284c7" stroke-width="1"/>
+    <text x="32" y="18" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#0284c7" text-anchor="middle">PISO 3</text>
+  </g>
+</svg>
+
