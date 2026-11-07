@@ -157,7 +157,8 @@ def test_columna_data_si_alguna_fila_la_te_i_buida_a_les_altres(conn: sqlite3.Co
 # --- bytes del fichero -----------------------------------------------------------------------------------------------
 
 
-def test_fitxer_utf8_sense_bom_amb_lf_i_salt_final(conn: sqlite3.Connection, tmp_path: Path) -> None:
+def test_fitxer_utf8_sense_bom_amb_crlf_i_salt_final(conn: sqlite3.Connection, tmp_path: Path) -> None:
+    # CRLF como los CSV oficiales del paquete (decisión del usuario del 2026-11-07).
     _preparar(conn)
     _assigna(conn, 1, "S90001", "L", "08:30", "Q1/9001")
     desti = tmp_path / "partida.csv"
@@ -166,9 +167,9 @@ def test_fitxer_utf8_sense_bom_amb_lf_i_salt_final(conn: sqlite3.Connection, tmp
 
     contingut = desti.read_bytes()
     assert not contingut.startswith(BOM)
-    assert b"\r" not in contingut
-    assert contingut.endswith(b"\n")
-    assert contingut.decode("utf-8") == "id_sessio,dia,h_ini,aula\nS90001,L,08:30,Q1/9001\n"
+    assert contingut.count(b"\n") == contingut.count(b"\r\n")
+    assert contingut.endswith(b"\r\n")
+    assert contingut.decode("utf-8") == "id_sessio,dia,h_ini,aula\r\nS90001,L,08:30,Q1/9001\r\n"
 
 
 # --- destino y versiones ---------------------------------------------------------------------------------------------
