@@ -96,11 +96,16 @@ nunca se suben:
 | No se sube | Por qué |
 |---|---|
 | `repte-horaris-escola/` | Es el paquete del reto (datos y verificador) |
-| `*.db`, `*.db-*` | La BD contiene todos los datos del paquete |
+| `*.db`, `*.db-*`, `*.sqlite*` | La BD contiene todos los datos del paquete |
 | `out/` | Los CSV e informes exportados contienen datos del paquete |
-| `.env` | Configuración local de cada uno |
+| `.env`, `.env.*` | Configuración local de cada uno (`.env.example` sí se sube) |
 
 Todo esto ya está en `.gitignore`. Antes de cada commit, mira `git status --short`.
+
+- `--out` y `--out-dir` aceptan cualquier ruta: exporta siempre dentro de `out/` (o de otra carpeta ignorada). Un CSV o
+  informe exportado a una carpeta versionada acabaría en el repo con datos del paquete.
+- `verificar` ejecuta el código Python de la carpeta `--verificador` / `HORARIS_VERIFICADOR`: apúntala solo al
+  verificador oficial del reto.
 
 Lo que sí se sube es cómo generarlo: las migraciones (`db/migrations/`), el extractor (`extractor/`), los tests con
 datos **falsos** (`tests/fixtures/`, inventados con las mismas cabeceras que el paquete) y el CI
