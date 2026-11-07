@@ -179,7 +179,6 @@
   <!-- Módulo Q6 -->
   <g id="block-q6">
     <rect x="1480" y="580" width="120" height="150" class="wall" />
-    <text x="1540" y="655" class="corridor-label">CORRIDOR</text>
 
     <g class="room" id="room-q6-0006" data-room="Q6/0006" tabindex="0" role="button" aria-label="Aula Q6/0006">
       <title>Aula Q6/0006</title>
@@ -199,7 +198,6 @@
 
     <!-- Pasillo interno de Q5 -->
     <rect x="1480" y="880" width="220" height="70" class="wall" />
-    <text x="1590" y="915" class="corridor-label">CORRIDOR</text>
 
     <!-- Sala Q5/0004 -->
     <g class="room" id="room-q5-0004" data-room="Q5/0004" tabindex="0" role="button" aria-label="Aula Q5/0004">
@@ -319,7 +317,7 @@
   <!-- Corredor Sur Central -->
   <g id="south-corridor">
     <path d="M 1480 1560 L 2430 1560" class="corridor-bound" />
-    <text x="1955" y="1625" class="corridor-label">CORRIDOR</text>
+
   </g>
 
   <!-- Sala nexo QP/0002 -->

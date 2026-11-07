@@ -1,53 +1,53 @@
 import React from 'react';
 
-export default function FloorSelector({ currentFloor, onSelectFloor, totalFloors = 3 }) {
+export default function FloorSelector({ currentFloor, onSelectFloor }) {
   const floorDescriptions = {
-    1: 'Piso 1 — Bloques Q1-Q6, Ala Central (QC) & Ala Sur (QP)',
-    2: 'Piso 2 — Laboratorios, Biblioteca & Aulas 201-203',
-    3: 'Piso 3 — Área Docente, Despachos & Terraza'
+    0: 'Planta 0 — Bloques Q1-Q6, Ala Central (QC) & Ala Sur (QP)',
+    1: 'Planta 1 — Bloques Q1-Q6 y Ala Central (QC)',
+    2: 'Planta 2 — Bloques Q5-Q6 y Ala Central (QC)'
   };
 
   return (
-    <section className="floor-navigation-bar" aria-label="Navegación entre pisos">
+    <section className="floor-navigation-bar" aria-label="Navegación entre plantas">
       <div className="floor-selector-card">
-        {/* Flecha Anterior */}
+        {/* Flecha Anterior (deshabilitada en la planta 0) */}
         <button
           type="button"
           className="nav-arrow-btn"
           onClick={() => onSelectFloor(currentFloor - 1)}
-          disabled={currentFloor <= 1}
-          aria-label="Ir al piso anterior"
-          title="Piso anterior"
+          disabled={currentFloor <= 0}
+          aria-label="Ir a la planta anterior"
+          title="Planta anterior"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
 
-        {/* Botones de los 3 pisos */}
+        {/* Botones de las 3 plantas: 0, 1 y 2 */}
         <div className="floor-indicators">
-          {[1, 2, 3].map((num) => (
+          {[0, 1, 2].map((num) => (
             <button
               key={num}
               type="button"
               className={`floor-pill ${currentFloor === num ? 'active' : ''}`}
               onClick={() => onSelectFloor(num)}
-              aria-label={`Piso ${num}`}
+              aria-label={`Planta ${num}`}
             >
               <span className="pill-number">{num}</span>
-              <span className="pill-text">Piso {num}</span>
+              <span className="pill-text">Planta {num}</span>
             </button>
           ))}
         </div>
 
-        {/* Flecha Siguiente */}
+        {/* Flecha Siguiente (deshabilitada en la planta 2) */}
         <button
           type="button"
           className="nav-arrow-btn"
           onClick={() => onSelectFloor(currentFloor + 1)}
-          disabled={currentFloor >= totalFloors}
-          aria-label="Ir al piso siguiente"
-          title="Piso siguiente"
+          disabled={currentFloor >= 2}
+          aria-label="Ir a la planta siguiente"
+          title="Planta siguiente"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
@@ -57,9 +57,8 @@ export default function FloorSelector({ currentFloor, onSelectFloor, totalFloors
 
       <div className="floor-meta-badge">
         <span className="meta-dot"></span>
-        <span>{floorDescriptions[currentFloor] || `Piso ${currentFloor}`}</span>
+        <span>{floorDescriptions[currentFloor] || `Planta ${currentFloor}`}</span>
       </div>
     </section>
   );
 }
-

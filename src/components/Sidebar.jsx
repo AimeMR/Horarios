@@ -9,44 +9,80 @@ export default function Sidebar({
 }) {
   const [openSections, setOpenSections] = useState({
     date: true,
-    class: true,
-    group: true,
-    course: true
+    degree: true,
+    course: true,
+    subject: true,
+    group: true
   });
 
   const toggleSection = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const handleDatePresetChange = (preset) => {
-    const today = new Date('2026-11-07T12:00:00');
-    let dateStr = '2026-11-07';
+  const degrees = [
+    { id: 'ing-informatica', name: 'Grado en Ingeniería Informática', short: 'Ing. Inf.' },
+    { id: 'ia', name: 'Grado en Inteligencia Artificial', short: 'IA' },
+    { id: 'ciberseguridad', name: 'Grado en Ciberseguridad', short: 'Ciber' },
+    { id: 'ciencia-datos', name: 'Grado en Ciencia de Datos', short: 'Datos' },
+    { id: 'ing-software', name: 'Grado en Ingeniería del Software', short: 'Software' }
+  ];
 
-    if (preset === 'tomorrow') {
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      dateStr = tomorrow.toISOString().split('T')[0];
-    } else if (preset === 'monday') {
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + 2);
-      dateStr = monday.toISOString().split('T')[0];
-    }
+  const courses = [
+    { id: '1', name: '1º Curso', short: '1º' },
+    { id: '2', name: '2º Curso', short: '2º' },
+    { id: '3', name: '3º Curso', short: '3º' },
+    { id: '4', name: '4º Curso', short: '4º' },
+    { id: 'master', name: 'Máster / Postgrado', short: 'Máster' }
+  ];
 
-    onFilterChange('datePreset', preset);
-    if (preset !== 'custom') {
-      onFilterChange('date', dateStr);
-    }
+  const subjects = [
+    { id: 'prog1', name: 'Programación I' },
+    { id: 'eda', name: 'Estructuras de Datos y Algoritmos' },
+    { id: 'algebra', name: 'Álgebra Lineal' },
+    { id: 'calculo', name: 'Cálculo' },
+    { id: 'so', name: 'Sistemas Operativos' },
+    { id: 'redes', name: 'Redes de Computadores' },
+    { id: 'bd', name: 'Bases de Datos' },
+    { id: 'ia', name: 'Inteligencia Artificial' },
+    { id: 'ac', name: 'Arquitectura de Computadores' },
+    { id: 'is', name: 'Ingeniería del Software' },
+    { id: 'seguridad', name: 'Seguridad en Sistemas' }
+  ];
+
+  const groups = [
+    { id: 'g1-m', name: 'Grupo 1 (Mañana)', short: 'G1-M' },
+    { id: 'g2-m', name: 'Grupo 2 (Mañana)', short: 'G2-M' },
+    { id: 'g3-t', name: 'Grupo 3 (Tarde)', short: 'G3-T' },
+    { id: 'g4-t', name: 'Grupo 4 (Tarde)', short: 'G4-T' },
+    { id: 'ga', name: 'Grupo A', short: 'GA' },
+    { id: 'gb', name: 'Grupo B', short: 'GB' }
+  ];
+
+  const formatDateBadge = (dateStr) => {
+    if (!dateStr) return 'Fecha';
+    const parts = dateStr.split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}` : dateStr;
   };
 
-  const getDateBadgeText = () => {
-    if (filters.datePreset === 'today') return 'Hoy';
-    if (filters.datePreset === 'tomorrow') return 'Mañana';
-    if (filters.datePreset === 'monday') return 'Lunes';
-    if (filters.date) {
-      const parts = filters.date.split('-');
-      return parts.length === 3 ? `${parts[2]}/${parts[1]}` : 'Fecha';
-    }
-    return 'Hoy';
+  const getDegreeBadge = () => {
+    const found = degrees.find(d => d.id === filters.degree);
+    return found ? found.short : 'Todos';
+  };
+
+  const getCourseBadge = () => {
+    const found = courses.find(c => c.id === filters.course);
+    return found ? found.short : 'Todos';
+  };
+
+  const getSubjectBadge = () => {
+    const found = subjects.find(s => s.id === filters.subject);
+    if (!found) return 'Todas';
+    return found.name.length > 12 ? `${found.name.substring(0, 10)}...` : found.name;
+  };
+
+  const getGroupBadge = () => {
+    const found = groups.find(g => g.id === filters.group);
+    return found ? found.short : 'Todos';
   };
 
   return (
@@ -73,7 +109,7 @@ export default function Sidebar({
       </div>
 
       <form className="filter-form" onSubmit={(e) => e.preventDefault()}>
-        {/* 1. SELECCIONAR FECHA (DESPLEGABLE) */}
+        {/* 1. FECHA (DÍA CONCRETO) */}
         <div className={`filter-dropdown ${openSections.date ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -88,10 +124,10 @@ export default function Sidebar({
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <span className="summary-title">Fecha</span>
+              <span className="summary-title">Fecha (día concreto)</span>
             </div>
             <div className="summary-right">
-              <span className="summary-badge is-active">{getDateBadgeText()}</span>
+              <span className="summary-badge is-active">{formatDateBadge(filters.date)}</span>
               <svg className="chevron-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
@@ -101,57 +137,37 @@ export default function Sidebar({
           {openSections.date && (
             <div className="filter-dropdown-content">
               <div className="filter-subgroup">
-                <label className="filter-sublabel" htmlFor="date-preset-select">Preselección rápida</label>
-                <div className="select-wrapper">
-                  <select
-                    id="date-preset-select"
-                    className="form-control"
-                    value={filters.datePreset}
-                    onChange={(e) => handleDatePresetChange(e.target.value)}
-                  >
-                    <option value="today">Hoy (07/11/2026)</option>
-                    <option value="tomorrow">Mañana (08/11/2026)</option>
-                    <option value="monday">Próximo Lunes (09/11/2026)</option>
-                    <option value="custom">Fecha personalizada...</option>
-                  </select>
-                </div>
-              </div>
-              <div className="filter-subgroup">
-                <label className="filter-sublabel" htmlFor="date-input">Calendario</label>
+                <label className="filter-sublabel" htmlFor="date-input">Seleccionar día</label>
                 <input
                   type="date"
                   id="date-input"
                   className="form-control"
                   value={filters.date}
-                  onChange={(e) => {
-                    onFilterChange('datePreset', 'custom');
-                    onFilterChange('date', e.target.value);
-                  }}
+                  onChange={(e) => onFilterChange('date', e.target.value)}
                 />
               </div>
-              <span className="filter-hint">Elige un día para ver la asignación de espacios</span>
+              <span className="filter-hint">Consulta la ocupación y horarios para este día</span>
             </div>
           )}
         </div>
 
-        {/* 2. ELEGIR CLASE (DESPLEGABLE) */}
-        <div className={`filter-dropdown ${openSections.class ? 'is-open' : ''}`}>
+        {/* 2. GRADO (DESPLEGABLE) */}
+        <div className={`filter-dropdown ${openSections.degree ? 'is-open' : ''}`}>
           <button
             type="button"
             className="filter-dropdown-summary"
-            onClick={() => toggleSection('class')}
-            aria-expanded={openSections.class}
+            onClick={() => toggleSection('degree')}
+            aria-expanded={openSections.degree}
           >
             <div className="summary-label-group">
               <svg className="summary-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="3" x2="9" y2="21"></line>
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
               </svg>
-              <span className="summary-title">Clase / Espacio</span>
+              <span className="summary-title">Grado</span>
             </div>
             <div className="summary-right">
-              <span className={`summary-badge ${filters.class ? 'is-active' : ''}`}>
-                {filters.class || 'Todas'}
+              <span className={`summary-badge ${filters.degree ? 'is-active' : ''}`}>
+                {getDegreeBadge()}
               </span>
               <svg className="chevron-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -159,80 +175,114 @@ export default function Sidebar({
             </div>
           </button>
 
-          {openSections.class && (
+          {openSections.degree && (
             <div className="filter-dropdown-content">
               <div className="select-wrapper">
                 <select
                   className="form-control"
-                  value={filters.class}
-                  onChange={(e) => onFilterChange('class', e.target.value)}
+                  value={filters.degree}
+                  onChange={(e) => onFilterChange('degree', e.target.value)}
                 >
-                  <option value="">Todas las clases</option>
-                  <optgroup label="Bloque Q4">
-                    <option value="Q4/0003">Q4/0003</option>
-                    <option value="Q4/0007">Q4/0007</option>
-                    <option value="Q4/0011">Q4/0011</option>
-                  </optgroup>
-                  <optgroup label="Bloque Q3">
-                    <option value="Q3/0003">Q3/0003</option>
-                    <option value="Q3/0007">Q3/0007</option>
-                    <option value="Q3/0011">Q3/0011</option>
-                  </optgroup>
-                  <optgroup label="Bloque Q2">
-                    <option value="Q2/0003">Q2/0003</option>
-                    <option value="Q2/0007">Q2/0007</option>
-                    <option value="Q2/0011">Q2/0011</option>
-                    <option value="Q2/0013">Q2/0013</option>
-                    <option value="Q2/0017">Q2/0017</option>
-                    <option value="Q2/0019">Q2/0019</option>
-                  </optgroup>
-                  <optgroup label="Bloque Q1">
-                    <option value="Q1/0003">Q1/0003</option>
-                    <option value="Q1/0007">Q1/0007</option>
-                    <option value="Q1/0013">Q1/0013</option>
-                    <option value="Q1/0019">Q1/0019</option>
-                  </optgroup>
-                  <optgroup label="Bloque Q5 / Q6">
-                    <option value="Q6/0006">Q6/0006</option>
-                    <option value="Q5/0003">Q5/0003</option>
-                    <option value="Q5/0004">Q5/0004</option>
-                  </optgroup>
-                  <optgroup label="Ala Central (QC)">
-                    <option value="QC/0067">QC/0067</option>
-                    <option value="QC/0069">QC/0069</option>
-                    <option value="QC/0073">QC/0073</option>
-                    <option value="QC/0075">QC/0075</option>
-                    <option value="QC/0077">QC/0077</option>
-                    <option value="QC/0079">QC/0079</option>
-                    <option value="QC/0081">QC/0081</option>
-                    <option value="QC/0083">QC/0083</option>
-                    <option value="QC/0085">QC/0085</option>
-                    <option value="QC/0087">QC/0087</option>
-                    <option value="QC/0089">QC/0089</option>
-                    <option value="QC/0091">QC/0091</option>
-                    <option value="QC/0107">QC/0107</option>
-                    <option value="QC/0109">QC/0109</option>
-                    <option value="QC/0111">QC/0111</option>
-                    <option value="QC/0113">QC/0113</option>
-                  </optgroup>
-                  <optgroup label="Ala Sur (QP)">
-                    <option value="QP/0002">QP/0002</option>
-                    <option value="QP/0003">QP/0003</option>
-                    <option value="QP/0005">QP/0005</option>
-                    <option value="QP/0006">QP/0006</option>
-                    <option value="QP/0007">QP/0007</option>
-                    <option value="QP/0008">QP/0008</option>
-                    <option value="QP/0009">QP/0009</option>
-                    <option value="QP/0012">QP/0012</option>
-                  </optgroup>
+                  <option value="">Todos los grados</option>
+                  {degrees.map(d => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
                 </select>
               </div>
-              <span className="filter-hint">Haz clic en un aula del plano o elígela aquí</span>
+              <span className="filter-hint">Titulación académica</span>
             </div>
           )}
         </div>
 
-        {/* 3. ELEGIR GRUPO (DESPLEGABLE) */}
+        {/* 3. CURSO (DESPLEGABLE) */}
+        <div className={`filter-dropdown ${openSections.course ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            className="filter-dropdown-summary"
+            onClick={() => toggleSection('course')}
+            aria-expanded={openSections.course}
+          >
+            <div className="summary-label-group">
+              <svg className="summary-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+              </svg>
+              <span className="summary-title">Curso</span>
+            </div>
+            <div className="summary-right">
+              <span className={`summary-badge ${filters.course ? 'is-active' : ''}`}>
+                {getCourseBadge()}
+              </span>
+              <svg className="chevron-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </button>
+
+          {openSections.course && (
+            <div className="filter-dropdown-content">
+              <div className="select-wrapper">
+                <select
+                  className="form-control"
+                  value={filters.course}
+                  onChange={(e) => onFilterChange('course', e.target.value)}
+                >
+                  <option value="">Todos los cursos</option>
+                  {courses.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="filter-hint">Año o nivel de la titulación</span>
+            </div>
+          )}
+        </div>
+
+        {/* 4. ASIGNATURA (DESPLEGABLE) */}
+        <div className={`filter-dropdown ${openSections.subject ? 'is-open' : ''}`}>
+          <button
+            type="button"
+            className="filter-dropdown-summary"
+            onClick={() => toggleSection('subject')}
+            aria-expanded={openSections.subject}
+          >
+            <div className="summary-label-group">
+              <svg className="summary-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              <span className="summary-title">Asignatura</span>
+            </div>
+            <div className="summary-right">
+              <span className={`summary-badge ${filters.subject ? 'is-active' : ''}`}>
+                {getSubjectBadge()}
+              </span>
+              <svg className="chevron-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </button>
+
+          {openSections.subject && (
+            <div className="filter-dropdown-content">
+              <div className="select-wrapper">
+                <select
+                  className="form-control"
+                  value={filters.subject}
+                  onChange={(e) => onFilterChange('subject', e.target.value)}
+                >
+                  <option value="">Todas las asignaturas</option>
+                  {subjects.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+              <span className="filter-hint">Materia correspondiente al curso</span>
+            </div>
+          )}
+        </div>
+
+        {/* 5. GRUPO (DESPLEGABLE) */}
         <div className={`filter-dropdown ${openSections.group ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -251,7 +301,7 @@ export default function Sidebar({
             </div>
             <div className="summary-right">
               <span className={`summary-badge ${filters.group ? 'is-active' : ''}`}>
-                {filters.group ? filters.group.replace('grupo-', 'G-').toUpperCase() : 'Todos'}
+                {getGroupBadge()}
               </span>
               <svg className="chevron-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -268,10 +318,9 @@ export default function Sidebar({
                   onChange={(e) => onFilterChange('group', e.target.value)}
                 >
                   <option value="">Todos los grupos</option>
-                  <option value="grupo-a">Grupo A (Mañana)</option>
-                  <option value="grupo-b">Grupo B (Mañana)</option>
-                  <option value="grupo-c">Grupo C (Tarde)</option>
-                  <option value="grupo-d">Grupo D (Tarde)</option>
+                  {groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
                 </select>
               </div>
               <span className="filter-hint">Turno de mañana o tarde</span>
@@ -279,52 +328,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* 4. ELEGIR CURSO (DESPLEGABLE) */}
-        <div className={`filter-dropdown ${openSections.course ? 'is-open' : ''}`}>
-          <button
-            type="button"
-            className="filter-dropdown-summary"
-            onClick={() => toggleSection('course')}
-            aria-expanded={openSections.course}
-          >
-            <div className="summary-label-group">
-              <svg className="summary-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-              </svg>
-              <span className="summary-title">Curso</span>
-            </div>
-            <div className="summary-right">
-              <span className={`summary-badge ${filters.course ? 'is-active' : ''}`}>
-                {filters.course ? `${filters.course}º` : 'Todos'}
-              </span>
-              <svg className="chevron-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </div>
-          </button>
-
-          {openSections.course && (
-            <div className="filter-dropdown-content">
-              <div className="select-wrapper">
-                <select
-                  className="form-control"
-                  value={filters.course}
-                  onChange={(e) => onFilterChange('course', e.target.value)}
-                >
-                  <option value="">Todos los cursos</option>
-                  <option value="1">1º Curso</option>
-                  <option value="2">2º Curso</option>
-                  <option value="3">3º Curso</option>
-                  <option value="4">4º Curso</option>
-                  <option value="master">Máster / Postgrado</option>
-                </select>
-              </div>
-              <span className="filter-hint">Nivel académico asociado</span>
-            </div>
-          )}
-        </div>
-
+        {/* Botones de Acción */}
         <div className="filter-actions">
           <button type="button" className="button button-secondary" onClick={onResetFilters}>
             Limpiar filtros
@@ -337,10 +341,9 @@ export default function Sidebar({
 
       <div className="sidebar-footer">
         <p className="footer-note">
-          Visualización y filtros reactivos en <code>React 18</code>.
+          Visualización de aulas para <code>Plantas 0, 1 y 2</code>.
         </p>
       </div>
     </aside>
   );
 }
-

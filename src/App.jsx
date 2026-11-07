@@ -6,46 +6,38 @@ import MapViewer from './components/MapViewer';
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [currentFloor, setCurrentFloor] = useState(1);
+  const [currentFloor, setCurrentFloor] = useState(0); // 0, 1 y 2
   const [selectedRoom, setSelectedRoom] = useState(null);
 
+  // Filtros: fecha (dia concreto), grado, curso, asignatura y grupo
   const [filters, setFilters] = useState({
-    datePreset: 'today',
     date: '2026-11-07',
-    class: '',
-    group: '',
-    course: ''
+    degree: '',
+    course: '',
+    subject: '',
+    group: ''
   });
 
-  // Manejo de cambio en los filtros
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
-
-    // Si se cambia la clase desde la barra lateral, sincroniza el plano
-    if (field === 'class') {
-      setSelectedRoom(value || null);
-    }
   };
 
-  // Manejo de selección de aula desde el mapa
   const handleSelectRoomFromMap = (roomId) => {
     setSelectedRoom(roomId);
-    setFilters((prev) => ({ ...prev, class: roomId || '' }));
   };
 
-  // Reset completo de filtros
   const handleResetFilters = () => {
     setFilters({
-      datePreset: 'today',
       date: '2026-11-07',
-      class: '',
-      group: '',
-      course: ''
+      degree: '',
+      course: '',
+      subject: '',
+      group: ''
     });
     setSelectedRoom(null);
   };
 
-  // Atajos de teclado globales
+  // Atajos de teclado: Ctrl+B para barra lateral, flechas para cambiar entre plantas 0, 1 y 2
   useEffect(() => {
     const handleKeyDown = (e) => {
       const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName);
@@ -56,9 +48,9 @@ export default function App() {
       } else if (e.key === 'Escape' && isSidebarOpen) {
         setIsSidebarOpen(false);
       } else if (!isInput) {
-        if (e.key === 'ArrowLeft' && currentFloor > 1) {
+        if (e.key === 'ArrowLeft' && currentFloor > 0) {
           setCurrentFloor((f) => f - 1);
-        } else if (e.key === 'ArrowRight' && currentFloor < 3) {
+        } else if (e.key === 'ArrowRight' && currentFloor < 2) {
           setCurrentFloor((f) => f + 1);
         }
       }
@@ -70,16 +62,16 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* 1. HEADER FIJO EN SU POSICIÓN */}
+      {/* HEADER FIJO EN SU POSICIÓN */}
       <Header
         isSidebarOpen={isSidebarOpen}
         onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
         currentFloor={currentFloor}
       />
 
-      {/* 2. ESPACIO DE TRABAJO */}
+      {/* ESPACIO DE TRABAJO */}
       <div className={`workspace-layout ${!isSidebarOpen ? 'sidebar-collapsed' : ''}`}>
-        {/* BARRA LATERAL CON DESPLEGABLES */}
+        {/* BARRA LATERAL CON LOS FILTROS: Fecha, Grado, Curso, Asignatura y Grupo */}
         <Sidebar
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
@@ -88,12 +80,11 @@ export default function App() {
           onResetFilters={handleResetFilters}
         />
 
-        {/* CONTENIDO PRINCIPAL: SELECTOR DE PISOS Y VISOR CON ZOOM & PAN */}
+        {/* CONTENIDO PRINCIPAL: SELECTOR DE PLANTAS (0, 1, 2) Y VISOR DE MAPA */}
         <main className="main-content">
           <FloorSelector
             currentFloor={currentFloor}
             onSelectFloor={setCurrentFloor}
-            totalFloors={3}
           />
 
           <MapViewer
@@ -106,4 +97,3 @@ export default function App() {
     </div>
   );
 }
-

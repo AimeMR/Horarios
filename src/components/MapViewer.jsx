@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Floor0Svg from './Floor0Svg';
 import Floor1Svg from './Floor1Svg';
 import Floor2Svg from './Floor2Svg';
-import Floor3Svg from './Floor3Svg';
 
 export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom }) {
   const [zoom, setZoom] = useState(1.0);
@@ -181,14 +181,14 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom }) 
             transition: isDraggingRef.current ? 'none' : 'transform 0.16s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
+          {currentFloor === 0 && (
+            <Floor0Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
+          )}
           {currentFloor === 1 && (
             <Floor1Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
           )}
           {currentFloor === 2 && (
             <Floor2Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
-          )}
-          {currentFloor === 3 && (
-            <Floor3Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
           )}
         </div>
 
