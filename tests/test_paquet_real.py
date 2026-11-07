@@ -1,7 +1,8 @@
 """Comprobación local con el paquete REAL del reto (T10). Nunca corre en CI.
 
-Se activa solo si están definidas HORARIS_PAQUET (carpeta `paquet/`) y HORARIS_VERIFICADOR (carpeta que contiene
-`horaris/`). Sin ellas, todo el módulo se salta.
+Se activa solo si está definida HORARIS_PAQUET (carpeta `paquet/`); sin ella, todo el módulo se salta. Los tests que
+lanzan el verificador real o importan `horaris.model` necesitan además HORARIS_VERIFICADOR (carpeta que contiene
+`horaris/`); sin ella, solo se saltan esos.
 
 Reglas: los asserts no vuelcan filas del paquete (solo recuentos, hashes, longitudes, códigos de grupo y veredictos).
 El paquete no se lee directamente: solo lo lee el extractor y el verificador oficial.
@@ -23,6 +24,7 @@ import pytest
 
 from extractor.db import connect
 from extractor.export import exportar
+from extractor.load import carregar
 from extractor.migrate import pujar
 from extractor.verificador import ResultatVerificacio, verificar
 from tests.conftest import comptar, consulta
@@ -33,8 +35,12 @@ PAQUET_REAL = os.environ.get(VAR_PAQUET)
 VERIFICADOR_REAL = os.environ.get(VAR_VERIFICADOR)
 
 pytestmark = pytest.mark.skipif(
-    not (PAQUET_REAL and VERIFICADOR_REAL),
-    reason=f"Falta {VAR_PAQUET} y/o {VAR_VERIFICADOR}: comprobación local con el paquete real (nunca en CI)",
+    not PAQUET_REAL,
+    reason=f"Falta {VAR_PAQUET}: comprobación local con el paquete real (nunca en CI)",
+)
+requereix_verificador = pytest.mark.skipif(
+    not VERIFICADOR_REAL,
+    reason=f"Falta {VAR_VERIFICADOR}: este test usa el verificador oficial",
 )
 
 TIMEOUT_VERIFICADOR_S = 900
@@ -80,8 +86,6 @@ def verificador() -> Path:
 @pytest.fixture(scope="module")
 def bd_real(tmp_path_factory: pytest.TempPathFactory, paquet: Path) -> Path:
     """Carga el paquete real UNA vez en una BD temporal (la carga tarda)."""
-    from extractor.load import carregar  # import tardío: el módulo puede no existir fuera de la fase de carga
-
     bd = tmp_path_factory.mktemp("paquet_real") / "horaris.db"
     with closing(connect(bd)) as conn:
         pujar(conn)
@@ -227,6 +231,7 @@ def test_export_partida_es_byte_a_byte_el_paquet(bd_real: Path, paquet: Path, tm
     assert _sha256(desti) == _sha256(original), "el CSV exportado difiere del original"
 
 
+@requereix_verificador
 def test_verificar_partida_dona_el_mateix_veredicte_que_el_directe(
     bd_real: Path,
     paquet: Path,
@@ -240,6 +245,7 @@ def test_verificar_partida_dona_el_mateix_veredicte_que_el_directe(
     assert _veredicte_de_json(resultat.informe) == _veredicte_de_json(informe_directe)
 
 
+@requereix_verificador
 def test_veredicte_del_verificador_real_es_no_valida(informe_directe: Path) -> None:
     assert _veredicte_de_json(informe_directe) == VEREDICTE_ESPERAT
 
@@ -247,6 +253,7 @@ def test_veredicte_del_verificador_real_es_no_valida(informe_directe: Path) -> N
 # --- regla de línea idéntica a la del verificador ------------------------------------------------------------
 
 
+@requereix_verificador
 def test_linia_de_cada_sessio_coincideix_amb_la_del_verificador(
     bd_real: Path, paquet: Path, model_verificador: _CarregaBase
 ) -> None:
