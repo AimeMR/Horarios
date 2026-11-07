@@ -27,12 +27,55 @@ const AFTERNOON_SLOTS = [
   { start: '20:00', end: '21:00', label: '20:00 – 21:00' },
 ];
 
+// Paleta de 12 colores diferenciados por asignatura
+const SUBJECT_THEMES = [
+  { bg: '#eff6ff', border: '#2563eb', text: '#1e3a8a', badgeBg: '#dbeafe', badgeText: '#1e40af' }, // Azul (Càlcul)
+  { bg: '#ecfdf5', border: '#059669', text: '#064e3b', badgeBg: '#d1fae5', badgeText: '#065f46' }, // Verde esmeralda (Física)
+  { bg: '#eef2ff', border: '#4f46e5', text: '#312e81', badgeBg: '#e0e7ff', badgeText: '#3730a3' }, // Índigo (Programació)
+  { bg: '#fffbeb', border: '#d97706', text: '#78350f', badgeBg: '#fef3c7', badgeText: '#92400e' }, // Ámbar (Àlgebra)
+  { bg: '#faf5ff', border: '#9333ea', text: '#581c87', badgeBg: '#f3e8ff', badgeText: '#6b21a8' }, // Púrpura (Estructures de Dades)
+  { bg: '#ecfeff', border: '#0891b2', text: '#164e63', badgeBg: '#cffafe', badgeText: '#155e75' }, // Cian (Sistemes Operatius)
+  { bg: '#fff7ed', border: '#ea580c', text: '#7c2d12', badgeBg: '#ffedd5', badgeText: '#9a3412' }, // Naranja / Coral (Bases de Dades)
+  { bg: '#fff1f2', border: '#e11d48', text: '#881337', badgeBg: '#ffe4e6', badgeText: '#9f1239' }, // Rosa frambuesa (Xarxes)
+  { bg: '#f7fee7', border: '#65a30d', text: '#365314', badgeBg: '#ecfccb', badgeText: '#3f6212' }, // Verde lima (Enginyeria Software)
+  { bg: '#fdf4ff', border: '#c026d3', text: '#701a75', badgeBg: '#fae8ff', badgeText: '#86198f' }, // Fucsia (Intel·ligència Artificial)
+  { bg: '#f0f9ff', border: '#0284c7', text: '#0c4a6e', badgeBg: '#e0f2fe', badgeText: '#0369a1' }, // Celeste (Aprenentatge Automàtic)
+  { bg: '#f5f3ff', border: '#7c3aed', text: '#4c1d95', badgeBg: '#ede9fe', badgeText: '#5b21b6' }, // Violeta (Ciberseguretat)
+];
+
+const PRESET_SUBJECT_INDEX = {
+  '240012': 0, // Càlcul I
+  '240011': 1, // Física I
+  '240013': 2, // Programació I
+  '240021': 3, // Àlgebra Lineal
+  '240022': 4, // Estructures de Dades
+  '240023': 5, // Sistemes Operatius
+  '240031': 6, // Bases de Dades
+  '240032': 7, // Xarxes de Computadors
+  '240041': 8, // Enginyeria del Software
+  '240051': 9, // Intel·ligència Artificial
+  '240052': 10, // Aprenentatge Automàtic
+  '240061': 11, // Ciberseguretat Avançada
+};
+
+function getSubjectTheme(codi, name = '') {
+  if (codi && PRESET_SUBJECT_INDEX[codi] !== undefined) {
+    return SUBJECT_THEMES[PRESET_SUBJECT_INDEX[codi]];
+  }
+  let hash = 0;
+  const str = codi || name || 'subject';
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return SUBJECT_THEMES[Math.abs(hash) % SUBJECT_THEMES.length];
+}
+
 function sessionCoversSlot(session, slot) {
   if (!session || !session.hIni || !session.hFi) return false;
   return session.hIni < slot.end && session.hFi > slot.start;
 }
 
-// Procesa una lista de franjas para un día calculando fusiones consecutivas (rowSpan)
 function buildDaySlotCells(slotDefinitions, daySessions) {
   const cells = slotDefinitions.map((slot) => {
     const session = daySessions.find((s) => sessionCoversSlot(s, slot)) || null;
@@ -45,7 +88,7 @@ function buildDaySlotCells(slotDefinitions, daySessions) {
     };
   });
 
-  // Agrupación consecutiva: si comparten el mismo subjectId, se fusionan como en Excel
+  // Agrupación consecutiva tipo Excel
   for (let i = 0; i < cells.length; i++) {
     if (cells[i].isCovered) continue;
     if (!cells[i].session) continue;
@@ -107,23 +150,14 @@ export default function RoomSchedulePopup({ room, onClose }) {
     return grid;
   }, [scheduleData]);
 
-  const getCellTypeClass = (tipus) => {
-    switch (tipus) {
-      case 'TE':
-        return 'cell-type-te';
-      case 'PLAB':
-        return 'cell-type-plab';
-      case 'SEM':
-        return 'cell-type-sem';
-      default:
-        return 'cell-type-default';
-    }
-  };
-
   return (
     <div
       className="schedule-modal-backdrop"
       onClick={onClose}
+      onWheel={(e) => {
+        // Bloquea completamente la propagación del zoom al mapa de detrás
+        e.stopPropagation();
+      }}
       role="dialog"
       aria-modal="true"
       aria-label={`Horario semanal del aula ${room}`}
@@ -132,6 +166,9 @@ export default function RoomSchedulePopup({ room, onClose }) {
       <div
         className="schedule-modal-dialog"
         onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => {
+          e.stopPropagation();
+        }}
       >
         {/* Cabecera del pop-up con botón de cierre X */}
         <div className="schedule-modal-header">
@@ -152,7 +189,7 @@ export default function RoomSchedulePopup({ room, onClose }) {
           </button>
         </div>
 
-        {/* Cajón contenedor de la tabla Excel */}
+        {/* Cajón contenedor responsivo de la tabla */}
         <div className="excel-table-scrollbox">
           {!weeklyGrid ? (
             <div className="modal-loading-box">
@@ -178,7 +215,7 @@ export default function RoomSchedulePopup({ room, onClose }) {
                     <td className="excel-time-cell">{slot.label}</td>
                     {DAYS.map((day) => {
                       const cell = weeklyGrid[day.key].morning[slotIdx];
-                      if (cell.isCovered) return null; // Omitir celda cubierta por rowSpan superior
+                      if (cell.isCovered) return null;
 
                       if (!cell.session) {
                         return (
@@ -190,27 +227,40 @@ export default function RoomSchedulePopup({ room, onClose }) {
 
                       const s = cell.session;
                       const isMerged = cell.rowSpan > 1;
+                      const theme = getSubjectTheme(s.assignatura?.codi, s.assignatura?.nom);
 
                       return (
                         <td
                           key={day.key}
                           rowSpan={cell.rowSpan}
-                          className={`excel-cell excel-cell-occupied ${getCellTypeClass(s.grup?.tipus)} ${
-                            isMerged ? 'is-merged-slot' : ''
-                          }`}
+                          className={`excel-cell excel-cell-occupied ${isMerged ? 'is-merged-slot' : ''}`}
+                          style={{
+                            backgroundColor: theme.bg,
+                            borderLeft: `4px solid ${theme.border}`,
+                          }}
                         >
                           <div className="cell-content">
-                            <div className="cell-subject-name">{s.assignatura?.nom}</div>
+                            <div className="cell-subject-name" style={{ color: theme.text }}>
+                              {s.assignatura?.nom}
+                            </div>
                             <div className="cell-subline">
-                              <span className="cell-group-badge">{s.grup?.grup}</span>
+                              <span
+                                className="cell-group-badge"
+                                style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
+                              >
+                                {s.grup?.grup}
+                              </span>
                               <span className="cell-subject-code">Cód. {s.assignatura?.codi}</span>
                             </div>
                             {s.profes && s.profes[0] && (
                               <div className="cell-prof">{s.profes[0]}</div>
                             )}
                             {isMerged && (
-                              <div className="cell-merged-indicator">
-                                {cell.rowSpan} horas combinadas
+                              <div
+                                className="cell-merged-indicator"
+                                style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
+                              >
+                                {cell.rowSpan}h combinadas
                               </div>
                             )}
                           </div>
@@ -246,27 +296,40 @@ export default function RoomSchedulePopup({ room, onClose }) {
 
                       const s = cell.session;
                       const isMerged = cell.rowSpan > 1;
+                      const theme = getSubjectTheme(s.assignatura?.codi, s.assignatura?.nom);
 
                       return (
                         <td
                           key={day.key}
                           rowSpan={cell.rowSpan}
-                          className={`excel-cell excel-cell-occupied ${getCellTypeClass(s.grup?.tipus)} ${
-                            isMerged ? 'is-merged-slot' : ''
-                          }`}
+                          className={`excel-cell excel-cell-occupied ${isMerged ? 'is-merged-slot' : ''}`}
+                          style={{
+                            backgroundColor: theme.bg,
+                            borderLeft: `4px solid ${theme.border}`,
+                          }}
                         >
                           <div className="cell-content">
-                            <div className="cell-subject-name">{s.assignatura?.nom}</div>
+                            <div className="cell-subject-name" style={{ color: theme.text }}>
+                              {s.assignatura?.nom}
+                            </div>
                             <div className="cell-subline">
-                              <span className="cell-group-badge">{s.grup?.grup}</span>
+                              <span
+                                className="cell-group-badge"
+                                style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
+                              >
+                                {s.grup?.grup}
+                              </span>
                               <span className="cell-subject-code">Cód. {s.assignatura?.codi}</span>
                             </div>
                             {s.profes && s.profes[0] && (
                               <div className="cell-prof">{s.profes[0]}</div>
                             )}
                             {isMerged && (
-                              <div className="cell-merged-indicator">
-                                {cell.rowSpan} horas combinadas
+                              <div
+                                className="cell-merged-indicator"
+                                style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
+                              >
+                                {cell.rowSpan}h combinadas
                               </div>
                             )}
                           </div>

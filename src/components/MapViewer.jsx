@@ -34,8 +34,13 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
     if (!container) return;
 
     const handleWheel = (e) => {
-      // Si el cursor está sobre controles o sobre el popup de horarios, permite el scroll normal del contenido
-      if (e.target.closest('.no-pan') || e.target.closest('.room-schedule-popup')) {
+      // Si el pop-up de horarios está abierto o el ratón está sobre el modal, NO aplicar zoom al mapa
+      if (
+        selectedRoom ||
+        e.target.closest('.schedule-modal-backdrop') ||
+        e.target.closest('.schedule-modal-dialog') ||
+        e.target.closest('.no-pan')
+      ) {
         return;
       }
 
@@ -64,7 +69,7 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
 
     container.addEventListener('wheel', handleWheel, { passive: false });
     return () => container.removeEventListener('wheel', handleWheel);
-  }, []);
+  }, [selectedRoom]);
 
   // ==========================================================================
   // 2. ARRASTRE Y DESPLAZAMIENTO (PAN & DRAG) CON CLIC ROBUSTO
