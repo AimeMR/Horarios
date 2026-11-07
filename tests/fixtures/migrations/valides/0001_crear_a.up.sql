@@ -1,0 +1,4 @@
+CREATE TABLE a (
+    id    INTEGER PRIMARY KEY,
+    nom   TEXT NOT NULL
+);
