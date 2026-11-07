@@ -96,7 +96,25 @@ describe("runProcess", () => {
     expect(error).not.toBeInstanceOf(ProcessTimeoutError);
   });
 
+  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    "rechaza timeoutMs=%s con RangeError sin lanzar el proceso",
+    async (timeoutMs) => {
+      const error = await rejectionOf(runProcess(process.execPath, ["-e", ""], { timeoutMs }));
+      expect(error).toBeInstanceOf(RangeError);
+    },
+  );
+
+  it("la causa solo lleva code y signal, sin la línea de comandos", async () => {
+    const error = await rejectionOf(
+      runProcess(path.join(procDir, "no-existe-xyz"), ["ARGSECRETO"], { timeoutMs: 5000 }),
+    );
+    const cause = (error as Error).cause as Record<string, unknown>;
+    expect(Object.keys(cause).sort()).toEqual(["code", "signal"]);
+    expect(JSON.stringify(cause)).not.toContain("ARGSECRETO");
+  });
+
   it("respeta cwd y env", async () => {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- os.tmpdir() es una ruta del sistema, sin entrada externa
     const dir = realpathSync(os.tmpdir());
     const result = await runProcess(process.execPath, [script("print-cwd-env.mjs")], {
       timeoutMs: 10000,
@@ -104,13 +122,13 @@ describe("runProcess", () => {
       env: { ...process.env, PROC_TEST_VAR: "valor-de-prueba" },
     });
     const parsed = JSON.parse(result.stdout) as { cwd: string; value: string | null };
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- cwd impreso por el fixture propio
     expect(realpathSync(parsed.cwd)).toBe(dir);
     expect(parsed.value).toBe("valor-de-prueba");
   });
 
   // Comprobación de contrato (estática): la implementación nunca usa shell ni exec.
   it("el código fuente no usa shell: true ni exec(", () => {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- ruta fija calculada en este fichero
     const source = readFileSync(path.join(here, "run-process.ts"), "utf8");
     expect(source).not.toMatch(/shell\s*:\s*true/);
     expect(source.replace(/execFile/g, "")).not.toMatch(/\bexec\s*\(/);

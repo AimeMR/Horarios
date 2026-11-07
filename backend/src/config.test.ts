@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadConfig } from "./config.js";
+import { isLoopbackHost, loadConfig } from "./config.js";
 
 const base = { HORARIS_DB: "/tmp/horaris.db" };
 
@@ -55,4 +55,17 @@ describe("loadConfig", () => {
     expect(message).toContain("LOG_LEVEL");
     expect(message).not.toContain("verbosisimo");
   });
+});
+
+describe("isLoopbackHost", () => {
+  it.each(["127.0.0.1", "127.5.4.3", "::1", "[::1]", "localhost", "LOCALHOST"])("%s es loopback", (host) => {
+    expect(isLoopbackHost(host)).toBe(true);
+  });
+
+  it.each(["0.0.0.0", "::", "192.168.1.5", "example.com", "127.0.0.1.evil.example", "1270.0.0.1"])(
+    "%s no es loopback",
+    (host) => {
+      expect(isLoopbackHost(host)).toBe(false);
+    },
+  );
 });

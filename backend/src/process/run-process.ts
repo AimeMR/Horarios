@@ -28,14 +28,16 @@ function isTimeout(error: ExecFailure): boolean {
   return error.code === "ETIMEDOUT" || (error.killed === true && Boolean(error.signal));
 }
 
+// El mensaje de Node incluye la línea de comandos y stderr: la causa solo lleva code y signal.
 function failureFrom(error: ExecFailure): Error {
+  const cause = { code: error.code, signal: error.signal };
   if (isTimeout(error)) {
-    return new ProcessTimeoutError({ cause: error });
+    return new ProcessTimeoutError({ cause });
   }
   if (error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
-    return new Error("process output exceeded the buffer limit", { cause: error });
+    return new Error("process output exceeded the buffer limit", { cause });
   }
-  return new Error("process failed to run", { cause: error });
+  return new Error("process failed to run", { cause });
 }
 
 export function runProcess(
@@ -43,6 +45,11 @@ export function runProcess(
   args: readonly string[],
   options: RunOptions,
 ): Promise<RunResult> {
+  if (!Number.isInteger(options.timeoutMs) || options.timeoutMs <= 0) {
+    return Promise.reject(new RangeError("timeoutMs must be a positive integer"));
+  }
+  // Pendiente hasta cablear el solver (aún sin consumidor): al vencer el timeout solo se mata el
+  // proceso hijo, no su árbol de procesos.
   return new Promise<RunResult>((resolve, reject) => {
     // Sin shell: execFile con argumentos en array; el fichero lo fija nuestro código.
     execFile(

@@ -11,6 +11,8 @@ function describeRule(issue: z.core.$ZodIssue): string {
       return `debe ser >= ${String(issue.minimum)}`;
     case "too_big":
       return `debe ser <= ${String(issue.maximum)}`;
+    case "custom":
+      return issue.message;
     case "invalid_format":
       return "formato no válido";
     case "not_multiple_of":

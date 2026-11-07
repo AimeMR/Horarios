@@ -52,6 +52,12 @@ function buildApp(): express.Express {
     await Promise.resolve();
     throw new NotFoundError("falta async");
   });
+  app.get("/p/:id", () => {
+    throw new Error("no debería llegar");
+  });
+  app.get("/forbidden", () => {
+    throw Object.assign(new Error(SECRET_MESSAGE), { status: 403 });
+  });
   app.use(notFoundHandler());
   app.use(errorHandler(memoryLogger()));
   return app;
@@ -148,5 +154,21 @@ describe("errorHandler", () => {
     const response = await request(buildApp()).get("/boom");
     const { requestId } = response.body as { requestId: string };
     expect(logLines.join("\n")).toContain(requestId);
+  });
+
+  it("parámetro con codificación inválida -> 400 invalid_request sin registrar el valor crudo", async () => {
+    const response = await request(buildApp()).get("/p/%E0");
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: "invalid_request" });
+    const logged = logLines.join("\n");
+    expect(logged).not.toContain("%E0");
+    expect(logged).not.toContain("decode");
+  });
+
+  it("cualquier error 4xx ajeno al dominio -> 400 invalid_request sin su mensaje", async () => {
+    const response = await request(buildApp()).get("/forbidden");
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: "invalid_request" });
+    expect(logLines.join("\n")).not.toContain(SECRET_MESSAGE);
   });
 });

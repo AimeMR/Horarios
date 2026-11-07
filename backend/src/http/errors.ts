@@ -18,6 +18,12 @@ function isBodyParserError(err: unknown): boolean {
   return typeof type === "string" && (status === 400 || status === 413);
 }
 
+function isClientError(err: unknown): boolean {
+  if (typeof err !== "object" || err === null) return false;
+  const { status, statusCode } = err as { status?: unknown; statusCode?: unknown };
+  return [status, statusCode].some((c) => typeof c === "number" && c >= 400 && c <= 499);
+}
+
 function requestIdOf(res: Response): string {
   const local: unknown = res.locals["requestId"];
   if (typeof local === "string" && local !== "") return local;
@@ -38,7 +44,9 @@ export function errorHandler(logger: Logger): ErrorRequestHandler {
       res.status(400).json({ error: "invalid_request", issues: err.issues });
     } else if (err instanceof NotImplementedError) {
       res.status(501).json({ error: "not_implemented" });
-    } else if (isBodyParserError(err)) {
+    } else if (isBodyParserError(err) || isClientError(err)) {
+      // Sin mensaje del error: p. ej. el URIError de Express incluye el parámetro crudo.
+      logger.warn({ requestId: requestIdOf(res) }, "petición rechazada");
       res.status(400).json({ error: "invalid_request" });
     } else {
       const requestId = requestIdOf(res);

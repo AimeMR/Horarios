@@ -117,6 +117,9 @@ npm run dev
 
 Para producción local: `npm run build && npm start`. Los tests: `npm test`.
 
+El backend no carga `.env`: las variables deben estar exportadas en la shell. Comprueba la cabecera `Host`: solo
+acepta `localhost`, `127.0.0.1` y `[::1]` en el puerto configurado (protección contra DNS rebinding).
+
 | Variable | Qué es | Por defecto |
 |---|---|---|
 | `HORARIS_DB` | Fichero SQLite que se lee (obligatoria) | - |

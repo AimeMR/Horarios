@@ -18,6 +18,11 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(LOG_LEVELS).default("info"),
 });
 
+export function isLoopbackHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return h === "localhost" || h === "::1" || h === "[::1]" || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h);
+}
+
 export function loadConfig(source: NodeJS.ProcessEnv = process.env): Config {
   const parsed = envSchema.safeParse(source);
   if (!parsed.success) {

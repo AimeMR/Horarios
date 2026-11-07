@@ -26,12 +26,20 @@ export const REGLES = [
 
 const recompte = z.number().finite().nonnegative();
 
+const MAX_REGLES = 100;
+const clauRegla = z.string().regex(/^R\d{1,2}-[A-Z0-9-]{1,32}$/);
+
+function mapaDeRegles<T extends z.ZodType>(valor: T) {
+  return z
+    .record(clauRegla, valor)
+    .refine((mapa) => Object.keys(mapa).length <= MAX_REGLES, { message: "massa regles" });
+}
+
 export const informeGuardatSchema = z.object({
-  restriccions: z.record(
-    z.string(),
+  restriccions: mapaDeRegles(
     z.object({ total: recompte, compten: recompte, declarades: recompte, heretades: recompte }),
   ),
-  no_avaluables: z.record(z.string(), recompte),
+  no_avaluables: mapaDeRegles(recompte),
   objectius: z.object({
     hores_mortes_min: recompte,
     desplacaments_aula: recompte,

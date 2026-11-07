@@ -58,3 +58,11 @@ describe("parseParams", () => {
     expect(() => parseParams(paramsSchema, { id })).toThrow(ValidationError);
   });
 });
+
+describe("issues custom", () => {
+  it("usa el mensaje propio del refine, sin el valor", () => {
+    const schema = z.object({ a: z.string().refine((v) => v === "ok", { message: "debe ser ok" }) });
+    const error = validationErrorOf(() => parseQuery(schema, { a: SECRET }));
+    expect(error.issues).toEqual([{ path: "a", message: "debe ser ok" }]);
+  });
+});
