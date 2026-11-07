@@ -1,0 +1,26 @@
+# Material del reto: datos pseudonimizados y verificador oficial. No se publican.
+repte-horaris-escola/
+
+# Base de datos generada (contiene los datos del paquete)
+*.db
+*.db-*
+
+# Propuestas e informes exportados (contienen datos del paquete)
+out/
+
+# Entorno local
+.env
+
+# Python
+__pycache__/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+
+# Builds
+build/
+dist/
