@@ -59,7 +59,8 @@ def codis(conn: sqlite3.Connection, sql: str) -> frozenset[str]:
 
 
 def llegir_escenaris(paquet: Path) -> tuple[EscenariJson, ...]:
-    """Cada `escenaris/<dir>/escenari.json`, en orden alfabético de `<dir>`, leído y validado una sola vez."""
+    """Cada `escenaris/<dir>/escenari.json`, en orden alfabético de `<dir>`, leído y validado con las mismas reglas
+    para todos los cargadores que lo llaman."""
     fitxers = sorted(paquet.glob(PATRO_ESCENARI), key=lambda path: path.parent.name)
     return tuple(_llegir_escenari(paquet, path) for path in fitxers)
 

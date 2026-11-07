@@ -293,6 +293,22 @@ def test_export_out_dins_dun_fitxer_surt_2_sense_traca(
     assert fitxer.read_text(encoding="utf-8") == "fals"
 
 
+def test_oserror_no_capturat_pels_moduls_surt_2_amb_missatge_generic(
+    carregada: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    ruta_secreta = "C:/ruta/secreta/no_es_mostra.csv"
+
+    def falla(*_: object, **__: object) -> int:
+        raise PermissionError(13, "denegat", ruta_secreta)
+
+    monkeypatch.setattr("extractor.__main__.exportar", falla)
+    codi, _, err = _cli(["--db", str(carregada), "export", "--versio", "partida"], capsys)
+    assert codi == 2
+    assert err == "error: no se puede leer o escribir un fichero\n"
+    assert ruta_secreta not in err
+    assert "Traceback" not in err
+
+
 @pytest.mark.parametrize(
     "versio", ["../x", "a/b", "nom espai", "", "x" * 65], ids=["recorregut", "barra", "espai", "buit", "llarg"]
 )
