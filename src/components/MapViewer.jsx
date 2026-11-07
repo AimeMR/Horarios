@@ -233,7 +233,7 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
         </div>
 
         {/* Barra Flotante de Controles de Zoom */}
-        <div className={`map-zoom-toolbar no-pan ${selectedRoom ? 'has-popup-open' : ''}`} role="toolbar" aria-label="Controles de zoom">
+        <div className="map-zoom-toolbar no-pan" role="toolbar" aria-label="Controles de zoom">
           <button
             type="button"
             className="zoom-btn"
@@ -287,11 +287,10 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
           <span>Rueda para zoom • Arrastra para moverte por el plano</span>
         </div>
 
-        {/* Pop-up lateral de horarios (ocupa exactamente el 50% del layout del mapa a la derecha) */}
+        {/* Pop-up modal de horarios semanales (centrado en pantalla, estilo tabla Excel) */}
         {selectedRoom && (
           <RoomSchedulePopup
             room={selectedRoom}
-            date={filters?.date || '2026-11-07'}
             onClose={() => onSelectRoom(null)}
           />
         )}
