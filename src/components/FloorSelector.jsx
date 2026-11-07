@@ -4,7 +4,8 @@ export default function FloorSelector({ currentFloor, onSelectFloor }) {
   const floorDescriptions = {
     0: 'Planta 0 — Bloques Q1-Q6, Ala Central (QC) & Ala Sur (QP)',
     1: 'Planta 1 — Bloques Q1-Q6 y Ala Central (QC)',
-    2: 'Planta 2 — Bloques Q5-Q6 y Ala Central (QC)'
+    2: 'Planta 2 — Bloques Q5-Q6 y Ala Central (QC)',
+    3: 'Planta 3 — Ala Central Superior (QC)'
   };
 
   return (
@@ -24,9 +25,9 @@ export default function FloorSelector({ currentFloor, onSelectFloor }) {
           </svg>
         </button>
 
-        {/* Botones de las 3 plantas: 0, 1 y 2 */}
+        {/* Botones de las 4 plantas: 0, 1, 2 y 3 */}
         <div className="floor-indicators">
-          {[0, 1, 2].map((num) => (
+          {[0, 1, 2, 3].map((num) => (
             <button
               key={num}
               type="button"
@@ -40,12 +41,12 @@ export default function FloorSelector({ currentFloor, onSelectFloor }) {
           ))}
         </div>
 
-        {/* Flecha Siguiente (deshabilitada en la planta 2) */}
+        {/* Flecha Siguiente (deshabilitada en la planta 3) */}
         <button
           type="button"
           className="nav-arrow-btn"
           onClick={() => onSelectFloor(currentFloor + 1)}
-          disabled={currentFloor >= 2}
+          disabled={currentFloor >= 3}
           aria-label="Ir a la planta siguiente"
           title="Planta siguiente"
         >

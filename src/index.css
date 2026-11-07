@@ -789,9 +789,598 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ==========================================================================
+   6. POP-UP DE HORARIOS (50% DEL LAYOUT DERECHO DEL MAPA)
+   ========================================================================== */
+.room-schedule-popup {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid var(--color-border);
+  box-shadow: -6px 0 28px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  z-index: 45;
+  animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.map-zoom-toolbar.has-popup-open {
+  right: calc(50% + 16px);
+  transition: right 0.22s ease;
+}
+
+.popup-header {
+  padding: 14px 18px;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.popup-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.popup-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.popup-room-badge {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: var(--color-accent);
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.popup-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background-color: var(--color-canvas);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--color-border);
+}
+
+.popup-source-pill {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #0284c7;
+  background-color: #e0f2fe;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.popup-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.popup-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--color-text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-smooth);
+}
+
+.popup-close-btn:hover {
+  background-color: #fee2e2;
+  color: var(--color-danger);
+}
+
+/* Barra de pestañas */
+.popup-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 18px;
+  background-color: var(--color-canvas);
+  border-bottom: 1px solid var(--color-border);
+  gap: 12px;
+}
+
+.popup-tabs {
+  display: flex;
+  gap: 6px;
+}
+
+.popup-tab-btn {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--transition-smooth);
+}
+
+.popup-tab-btn:hover:not(.active) {
+  color: var(--color-text-main);
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.popup-tab-btn.active {
+  background-color: var(--color-surface);
+  color: var(--color-accent);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.popup-stats-summary {
+  display: flex;
+  gap: 6px;
+}
+
+.stat-pill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 12px;
+}
+
+.stat-occupied {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.stat-free {
+  background-color: #ecfdf5;
+  color: #047857;
+}
+
+/* Cuerpo del Pop-up */
+.popup-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 18px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.popup-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.popup-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.popup-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.loading-spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid #e2e8f0;
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Timeline y secciones */
+.schedule-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-divider {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 6px 0 4px 0;
+  border-bottom: 2px solid var(--color-border);
+  margin-top: 6px;
+  margin-bottom: 4px;
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-main);
+}
+
+.section-span {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.slots-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Tarjeta de franja */
+.slot-card {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
+  overflow: hidden;
+}
+
+.slot-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+/* Franja fusionada consecutiva (misma asignatura) */
+.slot-card.is-merged-block {
+  border-left: 5px solid var(--color-accent);
+  background: linear-gradient(to right, rgba(2, 132, 199, 0.05), #ffffff 40%);
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);
+}
+
+.slot-card.is-merged-block .slot-time-col {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border-right-color: #bae6fd;
+}
+
+.slot-card.is-merged-block .slot-dur-badge {
+  background-color: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Franja libre */
+.slot-card.is-free {
+  border: 1px dashed #cbd5e1;
+  background-color: #fbfcfd;
+}
+
+.slot-time-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 66px;
+  padding: 8px 6px;
+  background-color: var(--color-canvas);
+  border-right: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.slot-time-sep {
+  color: var(--color-text-muted);
+  font-size: 0.625rem;
+  line-height: 1;
+  margin: 1px 0;
+}
+
+.slot-dur-badge {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 2px 4px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+
+.slot-content {
+  flex: 1;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+}
+
+.slot-content.is-empty {
+  padding: 10px 14px;
+}
+
+.empty-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.empty-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+}
+
+.empty-subtext {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+}
+
+.slot-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slot-subject-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.subject-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-main);
+}
+
+.subject-code {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.merged-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #0284c7;
+  background-color: #e0f2fe;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.slot-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.meta-pill {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-te {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-plab {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.badge-sem {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.badge-cohort {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
+.badge-neutral {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.slot-prof-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+.prof-name {
+  color: #475569;
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   FRANJA GRIS: 14:30 A 15:00 (PAUSA / ALMUERZO)
+   ========================================================================== */
+.pause-break-slot {
+  margin: 12px 0;
+  padding: 10px 14px;
+  background-color: #f1f5f9;
+  border: 1px dashed #94a3b8;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pause-icon-container {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pause-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pause-time {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pause-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.pause-badge {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: #e2e8f0;
+  color: #475569;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+/* Pestaña de Contrato JSON */
+.json-contract-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.json-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.json-meta-info {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.json-meta-info code {
+  font-family: var(--font-mono);
+  background-color: #e2e8f0;
+  color: #0f172a;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.copy-json-btn {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+}
+
+.copy-json-btn:hover {
+  background-color: var(--color-canvas);
+  border-color: #cbd5e1;
+}
+
+.json-code-box {
+  flex: 1;
+  max-height: 480px;
+  overflow: auto;
+  background-color: #0f172a;
+  color: #38bdf8;
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
 /* ==========================================================================
    RESPONSIVIDAD MÓVIL
    ========================================================================== */
+@media (max-width: 860px) {
+  .room-schedule-popup {
+    width: 92%;
+  }
+
+  .map-zoom-toolbar.has-popup-open {
+    right: 16px;
+    bottom: 8px;
+  }
+}
+
 @media (max-width: 768px) {
   .sidebar {
     position: absolute;

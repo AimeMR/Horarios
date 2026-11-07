@@ -120,3 +120,4 @@ export async function fetchFilterCategories(customUrl = null) {
     };
   }
 }
+

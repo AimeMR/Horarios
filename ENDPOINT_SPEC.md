@@ -77,3 +77,4 @@ El front-end admite tanto la nomenclatura en español como en inglés para mayor
 ## Comportamiento con Fallback
 
 Si el endpoint devuelve error (404, 500 o sin conexión), la aplicación entra en modo de respaldo (*fallback*) utilizando los datos base predeterminados sin bloquear al usuario ni interrumpir la navegación.
+

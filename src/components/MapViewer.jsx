@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Floor0Svg from './Floor0Svg';
 import Floor1Svg from './Floor1Svg';
 import Floor2Svg from './Floor2Svg';
+import Floor3Svg from './Floor3Svg';
+import RoomSchedulePopup from './RoomSchedulePopup';
 
-export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom }) {
+export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, filters }) {
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -31,6 +33,11 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom }) 
     if (!container) return;
 
     const handleWheel = (e) => {
+      // Si el cursor está sobre controles o sobre el popup de horarios, permite el scroll normal del contenido
+      if (e.target.closest('.no-pan') || e.target.closest('.room-schedule-popup')) {
+        return;
+      }
+
       // Bloquea completamente el scroll de la página web
       e.preventDefault();
 
@@ -190,29 +197,13 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom }) 
           {currentFloor === 2 && (
             <Floor2Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
           )}
+          {currentFloor === 3 && (
+            <Floor3Svg selectedRoom={selectedRoom} onSelectRoom={handleRoomSelect} />
+          )}
         </div>
 
-        {/* Banner Flotante de Aula Seleccionada */}
-        {selectedRoom && (
-          <div className="selected-room-banner no-pan">
-            <span className="banner-dot"></span>
-            <span>
-              Espacio seleccionado: <strong className="banner-code">{selectedRoom}</strong>
-            </span>
-            <button
-              type="button"
-              className="banner-close-btn"
-              onClick={() => onSelectRoom(null)}
-              aria-label="Deseleccionar aula"
-              title="Cerrar selección"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-
         {/* Barra Flotante de Controles de Zoom */}
-        <div className="map-zoom-toolbar no-pan" role="toolbar" aria-label="Controles de zoom">
+        <div className={`map-zoom-toolbar no-pan ${selectedRoom ? 'has-popup-open' : ''}`} role="toolbar" aria-label="Controles de zoom">
           <button
             type="button"
             className="zoom-btn"
@@ -265,9 +256,16 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom }) 
         <div className="map-pan-hint">
           <span>Rueda para zoom • Arrastra para moverte por el plano</span>
         </div>
+
+        {/* Pop-up lateral de horarios (ocupa exactamente el 50% del layout del mapa a la derecha) */}
+        {selectedRoom && (
+          <RoomSchedulePopup
+            room={selectedRoom}
+            date={filters?.date || '2026-11-07'}
+            onClose={() => onSelectRoom(null)}
+          />
+        )}
       </div>
-
-
     </section>
   );
 }

@@ -56,8 +56,7 @@ export default function Sidebar({
   };
 
   const getGroupBadge = () => {
-    const found = groups.find(g => g.id === filters.group);
-    return found ? found.short : 'Todos';
+    return filters.group ? `G. ${filters.group}` : 'Todos';
   };
 
   // Filtrado de asignaturas según grado o curso si están definidos
@@ -268,7 +267,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* 5. GRUPO (DESDE ENDPOINT) */}
+        {/* 5. GRUPO (NUMÉRICO) */}
         <div className={`filter-dropdown ${openSections.group ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -297,20 +296,19 @@ export default function Sidebar({
 
           {openSections.group && (
             <div className="filter-dropdown-content">
-              <div className="select-wrapper">
-                <select
+              <div className="filter-subgroup">
+                <label className="filter-sublabel" htmlFor="group-input">Número identificador</label>
+                <input
+                  type="number"
+                  id="group-input"
                   className="form-control"
-                  value={filters.group}
+                  placeholder="Ej: 450"
+                  min="1"
+                  value={filters.group || ''}
                   onChange={(e) => onFilterChange('group', e.target.value)}
-                  disabled={isLoading}
-                >
-                  <option value="">Todos los grupos</option>
-                  {groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
+                />
               </div>
-              <span className="filter-hint">Turno de mañana o tarde</span>
+              <span className="filter-hint">Introduce el número del grupo (ej. 450)</span>
             </div>
           )}
         </div>

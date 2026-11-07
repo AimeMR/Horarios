@@ -6,7 +6,7 @@ import MapViewer from './components/MapViewer';
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [currentFloor, setCurrentFloor] = useState(0); // 0, 1 y 2
+  const [currentFloor, setCurrentFloor] = useState(0); // 0, 1, 2 y 3
   const [selectedRoom, setSelectedRoom] = useState(null);
 
   // Filtros: fecha (dia concreto), grado, curso, asignatura y grupo
@@ -45,12 +45,16 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
         e.preventDefault();
         setIsSidebarOpen((prev) => !prev);
-      } else if (e.key === 'Escape' && isSidebarOpen) {
-        setIsSidebarOpen(false);
+      } else if (e.key === 'Escape') {
+        if (selectedRoom) {
+          setSelectedRoom(null);
+        } else if (isSidebarOpen) {
+          setIsSidebarOpen(false);
+        }
       } else if (!isInput) {
         if (e.key === 'ArrowLeft' && currentFloor > 0) {
           setCurrentFloor((f) => f - 1);
-        } else if (e.key === 'ArrowRight' && currentFloor < 2) {
+        } else if (e.key === 'ArrowRight' && currentFloor < 3) {
           setCurrentFloor((f) => f + 1);
         }
       }
@@ -58,7 +62,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSidebarOpen, currentFloor]);
+  }, [isSidebarOpen, currentFloor, selectedRoom]);
 
   return (
     <div className="app-container">
@@ -80,7 +84,7 @@ export default function App() {
           onResetFilters={handleResetFilters}
         />
 
-        {/* CONTENIDO PRINCIPAL: SELECTOR DE PLANTAS (0, 1, 2) Y VISOR DE MAPA */}
+        {/* CONTENIDO PRINCIPAL: SELECTOR DE PLANTAS (0, 1, 2, 3) Y VISOR DE MAPA */}
         <main className="main-content">
           <FloorSelector
             currentFloor={currentFloor}
@@ -91,6 +95,7 @@ export default function App() {
             currentFloor={currentFloor}
             selectedRoom={selectedRoom}
             onSelectRoom={handleSelectRoomFromMap}
+            filters={filters}
           />
         </main>
       </div>
