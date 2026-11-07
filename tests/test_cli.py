@@ -204,6 +204,16 @@ def test_sense_db_ni_variable_nomena_horaris_db(capsys: pytest.CaptureFixture[st
     assert err.startswith("error:")
 
 
+def test_db_dins_dun_fitxer_surt_2_sense_traca(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    fitxer = tmp_path / "no_es_carpeta"
+    fitxer.write_text("fals", encoding="utf-8")
+    codi, _, err = _cli(["--db", str(fitxer / "bd.db"), "migrate"], capsys)
+    assert codi == 2
+    assert err.startswith("error:")
+    assert "Traceback" not in err
+    assert str(fitxer) not in err
+
+
 # --- migrate -------------------------------------------------------------------------------------------------
 
 
@@ -268,6 +278,19 @@ def test_export_versio_inexistent_falla_i_no_escriu(
     assert err.startswith("error:")
     assert "Traceback" not in err
     assert not desti.exists()
+
+
+def test_export_out_dins_dun_fitxer_surt_2_sense_traca(
+    carregada: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    fitxer = tmp_path / "no_es_carpeta"
+    fitxer.write_text("fals", encoding="utf-8")
+    argv = ["--db", str(carregada), "export", "--versio", "partida", "--out", str(fitxer / "p.csv")]
+    codi, _, err = _cli(argv, capsys)
+    assert codi == 2
+    assert err.startswith("error:")
+    assert "Traceback" not in err
+    assert fitxer.read_text(encoding="utf-8") == "fals"
 
 
 @pytest.mark.parametrize(

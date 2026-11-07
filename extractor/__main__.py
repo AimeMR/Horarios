@@ -14,7 +14,7 @@ from pathlib import Path
 
 from extractor import config
 from extractor.db import connect
-from extractor.errors import ExtractorError
+from extractor.errors import ConfigError, ExtractorError
 from extractor.export import exportar, validar_nom_versio
 from extractor.load import carregar
 from extractor.migrate import baixar, pujar
@@ -28,6 +28,7 @@ DIR_SORTIDA = Path("out")
 TIMEOUT_DEFECTE_S = 900.0
 PREFIX_VALIDA = "VALIDA"
 MISSATGE_ERROR_BD = "error de base de datos"
+MISSATGE_ERROR_FITXER = "no se puede leer o escribir un fichero"
 
 Comanda = Callable[[argparse.Namespace], int]
 
@@ -42,6 +43,8 @@ def main(argv: list[str] | None = None) -> int:
         return _error(str(error))
     except sqlite3.Error:
         return _error(MISSATGE_ERROR_BD)
+    except OSError:
+        return _error(MISSATGE_ERROR_FITXER)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -89,7 +92,10 @@ def _connecta(args: argparse.Namespace) -> sqlite3.Connection:
     """Resuelve la ruta de la BD (argumento o HORARIS_DB), crea su carpeta y abre la conexión."""
     valor: str | None = args.db
     ruta = config.ruta_db(valor)
-    ruta.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        raise ConfigError("no se puede crear la carpeta de la BD") from error
     return connect(ruta)
 
 
