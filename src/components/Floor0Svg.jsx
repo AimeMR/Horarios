@@ -172,3 +172,4 @@ export default function Floor0Svg({ selectedRoom, onSelectRoom }) {
     </svg>
   );
 }
+

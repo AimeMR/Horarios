@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useFilterCategories } from '../services/useFilterCategories';
 
 export default function Sidebar({
   isOpen,
@@ -15,47 +16,21 @@ export default function Sidebar({
     group: true
   });
 
+  // Consumo dinámico de categorías preparadas para endpoint backend
+  const { categories, isLoading, isFallback } = useFilterCategories();
+  const { degrees, subjects, groups } = categories;
+
   const toggleSection = (section) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const degrees = [
-    { id: 'ing-informatica', name: 'Grado en Ingeniería Informática', short: 'Ing. Inf.' },
-    { id: 'ia', name: 'Grado en Inteligencia Artificial', short: 'IA' },
-    { id: 'ciberseguridad', name: 'Grado en Ciberseguridad', short: 'Ciber' },
-    { id: 'ciencia-datos', name: 'Grado en Ciencia de Datos', short: 'Datos' },
-    { id: 'ing-software', name: 'Grado en Ingeniería del Software', short: 'Software' }
-  ];
-
+  // Cursos actualizados: 1º, 2º, 3º, 4º y 5º Curso
   const courses = [
     { id: '1', name: '1º Curso', short: '1º' },
     { id: '2', name: '2º Curso', short: '2º' },
     { id: '3', name: '3º Curso', short: '3º' },
     { id: '4', name: '4º Curso', short: '4º' },
-    { id: 'master', name: 'Máster / Postgrado', short: 'Máster' }
-  ];
-
-  const subjects = [
-    { id: 'prog1', name: 'Programación I' },
-    { id: 'eda', name: 'Estructuras de Datos y Algoritmos' },
-    { id: 'algebra', name: 'Álgebra Lineal' },
-    { id: 'calculo', name: 'Cálculo' },
-    { id: 'so', name: 'Sistemas Operativos' },
-    { id: 'redes', name: 'Redes de Computadores' },
-    { id: 'bd', name: 'Bases de Datos' },
-    { id: 'ia', name: 'Inteligencia Artificial' },
-    { id: 'ac', name: 'Arquitectura de Computadores' },
-    { id: 'is', name: 'Ingeniería del Software' },
-    { id: 'seguridad', name: 'Seguridad en Sistemas' }
-  ];
-
-  const groups = [
-    { id: 'g1-m', name: 'Grupo 1 (Mañana)', short: 'G1-M' },
-    { id: 'g2-m', name: 'Grupo 2 (Mañana)', short: 'G2-M' },
-    { id: 'g3-t', name: 'Grupo 3 (Tarde)', short: 'G3-T' },
-    { id: 'g4-t', name: 'Grupo 4 (Tarde)', short: 'G4-T' },
-    { id: 'ga', name: 'Grupo A', short: 'GA' },
-    { id: 'gb', name: 'Grupo B', short: 'GB' }
+    { id: '5', name: '5º Curso', short: '5º' }
   ];
 
   const formatDateBadge = (dateStr) => {
@@ -84,6 +59,15 @@ export default function Sidebar({
     const found = groups.find(g => g.id === filters.group);
     return found ? found.short : 'Todos';
   };
+
+  // Filtrado de asignaturas según grado o curso si están definidos
+  const filteredSubjects = subjects.filter(s => {
+    if (filters.degree && s.gradoId && s.gradoId !== filters.degree) return false;
+    if (filters.course && s.curso && s.curso !== filters.course) return false;
+    return true;
+  });
+
+  const availableSubjects = filteredSubjects.length > 0 ? filteredSubjects : subjects;
 
   return (
     <aside className={`sidebar ${!isOpen ? 'collapsed' : ''}`} aria-label="Filtros de búsqueda">
@@ -151,7 +135,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* 2. GRADO (DESPLEGABLE) */}
+        {/* 2. GRADO (DESDE ENDPOINT) */}
         <div className={`filter-dropdown ${openSections.degree ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -182,6 +166,7 @@ export default function Sidebar({
                   className="form-control"
                   value={filters.degree}
                   onChange={(e) => onFilterChange('degree', e.target.value)}
+                  disabled={isLoading}
                 >
                   <option value="">Todos los grados</option>
                   {degrees.map(d => (
@@ -189,12 +174,12 @@ export default function Sidebar({
                   ))}
                 </select>
               </div>
-              <span className="filter-hint">Titulación académica</span>
+              <span className="filter-hint">Titulación académica obtenida del sistema</span>
             </div>
           )}
         </div>
 
-        {/* 3. CURSO (DESPLEGABLE) */}
+        {/* 3. CURSO (1º A 5º) */}
         <div className={`filter-dropdown ${openSections.course ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -233,12 +218,12 @@ export default function Sidebar({
                   ))}
                 </select>
               </div>
-              <span className="filter-hint">Año o nivel de la titulación</span>
+              <span className="filter-hint">Año o nivel lectivo (1º a 5º)</span>
             </div>
           )}
         </div>
 
-        {/* 4. ASIGNATURA (DESPLEGABLE) */}
+        {/* 4. ASIGNATURA (DESDE ENDPOINT) */}
         <div className={`filter-dropdown ${openSections.subject ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -270,19 +255,20 @@ export default function Sidebar({
                   className="form-control"
                   value={filters.subject}
                   onChange={(e) => onFilterChange('subject', e.target.value)}
+                  disabled={isLoading}
                 >
                   <option value="">Todas las asignaturas</option>
-                  {subjects.map(s => (
+                  {availableSubjects.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>
-              <span className="filter-hint">Materia correspondiente al curso</span>
+              <span className="filter-hint">Materia correspondiente según titulación</span>
             </div>
           )}
         </div>
 
-        {/* 5. GRUPO (DESPLEGABLE) */}
+        {/* 5. GRUPO (DESDE ENDPOINT) */}
         <div className={`filter-dropdown ${openSections.group ? 'is-open' : ''}`}>
           <button
             type="button"
@@ -316,6 +302,7 @@ export default function Sidebar({
                   className="form-control"
                   value={filters.group}
                   onChange={(e) => onFilterChange('group', e.target.value)}
+                  disabled={isLoading}
                 >
                   <option value="">Todos los grupos</option>
                   {groups.map(g => (
@@ -341,7 +328,7 @@ export default function Sidebar({
 
       <div className="sidebar-footer">
         <p className="footer-note">
-          Visualización de aulas para <code>Plantas 0, 1 y 2</code>.
+          Categorías conectadas al endpoint <code>/api/filters</code> {isFallback && '(modo base)'}.
         </p>
       </div>
     </aside>

@@ -1,0 +1,135 @@
+{
+  "grados": [
+    {
+      "id": "ing-informatica",
+      "nombre": "Grado en Ingeniería Informática",
+      "abreviatura": "Ing. Inf."
+    },
+    {
+      "id": "ia",
+      "nombre": "Grado en Inteligencia Artificial",
+      "abreviatura": "IA"
+    },
+    {
+      "id": "ciberseguridad",
+      "nombre": "Grado en Ciberseguridad",
+      "abreviatura": "Ciber"
+    },
+    {
+      "id": "ciencia-datos",
+      "nombre": "Grado en Ciencia e Ingeniería de Datos",
+      "abreviatura": "Datos"
+    },
+    {
+      "id": "ing-software",
+      "nombre": "Grado en Ingeniería del Software",
+      "abreviatura": "Software"
+    }
+  ],
+  "asignaturas": [
+    {
+      "id": "prog1",
+      "nombre": "Programación I",
+      "gradoId": "ing-informatica",
+      "curso": "1"
+    },
+    {
+      "id": "eda",
+      "nombre": "Estructuras de Datos y Algoritmos",
+      "gradoId": "ing-informatica",
+      "curso": "2"
+    },
+    {
+      "id": "algebra",
+      "nombre": "Álgebra Lineal",
+      "gradoId": "ing-informatica",
+      "curso": "1"
+    },
+    {
+      "id": "calculo",
+      "nombre": "Cálculo",
+      "gradoId": "ing-informatica",
+      "curso": "1"
+    },
+    {
+      "id": "so",
+      "nombre": "Sistemas Operativos",
+      "gradoId": "ing-informatica",
+      "curso": "2"
+    },
+    {
+      "id": "redes",
+      "nombre": "Redes de Computadores",
+      "gradoId": "ing-informatica",
+      "curso": "3"
+    },
+    {
+      "id": "bd",
+      "nombre": "Bases de Datos",
+      "gradoId": "ing-informatica",
+      "curso": "2"
+    },
+    {
+      "id": "ia",
+      "nombre": "Inteligencia Artificial",
+      "gradoId": "ia",
+      "curso": "3"
+    },
+    {
+      "id": "ac",
+      "nombre": "Arquitectura de Computadores",
+      "gradoId": "ing-informatica",
+      "curso": "2"
+    },
+    {
+      "id": "is",
+      "nombre": "Ingeniería del Software",
+      "gradoId": "ing-software",
+      "curso": "3"
+    },
+    {
+      "id": "seguridad",
+      "nombre": "Seguridad en Sistemas",
+      "gradoId": "ciberseguridad",
+      "curso": "4"
+    },
+    {
+      "id": "tfg",
+      "nombre": "Trabajo Fin de Grado",
+      "gradoId": "ing-informatica",
+      "curso": "5"
+    }
+  ],
+  "grupos": [
+    {
+      "id": "g1-m",
+      "nombre": "Grupo 1 (Mañana)",
+      "abreviatura": "G1-M"
+    },
+    {
+      "id": "g2-m",
+      "nombre": "Grupo 2 (Mañana)",
+      "abreviatura": "G2-M"
+    },
+    {
+      "id": "g3-t",
+      "nombre": "Grupo 3 (Tarde)",
+      "abreviatura": "G3-T"
+    },
+    {
+      "id": "g4-t",
+      "nombre": "Grupo 4 (Tarde)",
+      "abreviatura": "G4-T"
+    },
+    {
+      "id": "ga",
+      "nombre": "Grupo A",
+      "abreviatura": "GA"
+    },
+    {
+      "id": "gb",
+      "nombre": "Grupo B",
+      "abreviatura": "GB"
+    }
+  ]
+}
