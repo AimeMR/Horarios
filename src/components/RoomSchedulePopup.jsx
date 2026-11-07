@@ -164,6 +164,8 @@ export default function RoomSchedulePopup({ room, date = '2026-11-07', onClose }
     <aside
       className="room-schedule-popup no-pan"
       aria-label={`Horario de la sala ${room}`}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {/* Cabecera del Pop-up */}
       <div className="popup-header">

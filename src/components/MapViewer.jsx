@@ -14,6 +14,7 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
   const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const hasMovedRef = useRef(false);
+  const pendingRoomTargetRef = useRef(null);
 
   const MIN_ZOOM = 0.4;
   const MAX_ZOOM = 5.0;
@@ -66,11 +67,15 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
   }, []);
 
   // ==========================================================================
-  // 2. ARRASTRE Y DESPLAZAMIENTO (PAN & DRAG)
+  // 2. ARRASTRE Y DESPLAZAMIENTO (PAN & DRAG) CON CLIC ROBUSTO
   // ==========================================================================
   const handlePointerDown = (e) => {
     if (e.button !== 0) return; // Solo clic primario
-    if (e.target.closest('.no-pan')) return;
+    if (e.target.closest('.no-pan') || e.target.closest('.room-schedule-popup')) return;
+
+    // Detectar si el usuario presionó sobre un aula
+    const roomEl = e.target.closest('.room') || e.target.closest('[data-room]');
+    pendingRoomTargetRef.current = roomEl?.getAttribute('data-room') || null;
 
     isDraggingRef.current = true;
     hasMovedRef.current = false;
@@ -80,10 +85,6 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
       panX: pan.x,
       panY: pan.y,
     };
-
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch (_) { }
   };
 
   const handlePointerMove = (e) => {
@@ -92,30 +93,51 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
 
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+    // Solo si el ratón se desplaza más de 5px se considera arrastre
+    if (!hasMovedRef.current && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
       hasMovedRef.current = true;
+      pendingRoomTargetRef.current = null; // Si arrastró, se anula la selección
       setIsPanning(true);
+      try {
+        if (!e.currentTarget.hasPointerCapture(e.pointerId)) {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        }
+      } catch (_) { }
     }
 
-    setPan({
-      x: dragStartRef.current.panX + dx,
-      y: dragStartRef.current.panY + dy,
-    });
+    if (hasMovedRef.current) {
+      setPan({
+        x: dragStartRef.current.panX + dx,
+        y: dragStartRef.current.panY + dy,
+      });
+    }
   };
 
   const handlePointerUp = (e) => {
     if (!isDraggingRef.current) return;
+    const wasDragging = hasMovedRef.current;
+    const clickedRoom = pendingRoomTargetRef.current;
+
     isDraggingRef.current = false;
+    hasMovedRef.current = false;
     setIsPanning(false);
+    pendingRoomTargetRef.current = null;
 
     try {
-      e.currentTarget.releasePointerCapture(e.pointerId);
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
     } catch (_) { }
+
+    // Si fue un clic simple sin arrastrar sobre un aula, abrir de inmediato
+    if (!wasDragging && clickedRoom) {
+      onSelectRoom(clickedRoom);
+    }
   };
 
   // Doble clic para zoom rápido en un punto
   const handleDoubleClick = (e) => {
-    if (e.target.closest('.no-pan')) return;
+    if (e.target.closest('.no-pan') || e.target.closest('.room-schedule-popup')) return;
 
     const rect = containerRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left - rect.width / 2;
@@ -136,15 +158,23 @@ export default function MapViewer({ currentFloor, selectedRoom, onSelectRoom, fi
 
   // Clic en un aula (discriminando si el usuario estaba arrastrando)
   const handleRoomSelect = useCallback((roomId, e) => {
-    if (hasMovedRef.current) return; // Si arrastró, no se considera clic
     if (e) e.stopPropagation();
-    onSelectRoom(roomId);
+    if (!hasMovedRef.current) {
+      onSelectRoom(roomId);
+    }
   }, [onSelectRoom]);
 
   // Clic en fondo neutro del mapa para deseleccionar aula
   const handleBackgroundClick = (e) => {
     if (hasMovedRef.current) return;
-    if (e.target.closest('.room')) return;
+    if (
+      e.target.closest('.room') ||
+      e.target.closest('[data-room]') ||
+      e.target.closest('.no-pan') ||
+      e.target.closest('.room-schedule-popup')
+    ) {
+      return;
+    }
     onSelectRoom(null);
   };
 

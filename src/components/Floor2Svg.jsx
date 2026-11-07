@@ -15,10 +15,14 @@ export default function Floor2Svg({ selectedRoom, onSelectRoom }) {
         tabIndex={0}
         role="button"
         aria-label={`Aula ${name}`}
-        onClick={(e) => onSelectRoom(name, e)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelectRoom(name, e);
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            e.stopPropagation();
             onSelectRoom(name, e);
           }
         }}
