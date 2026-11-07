@@ -1,0 +1,5 @@
+data,tipus,h_ini,h_fi,motiu,font
+2026-10-12,festiu,,,Festa fictícia,dades falses de test
+2026-12-23,no_lectiu,,,Dia no lectiu fictici,dades falses de test
+2027-01-20,aturada,08:00,14:00,Aturada fictícia,dades falses de test
+2027-01-25,avaluacio,,,Setmana d'avaluació fictícia,dades falses de test
