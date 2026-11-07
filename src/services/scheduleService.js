@@ -30,10 +30,242 @@ function hashString(str) {
 }
 
 /**
+ * Horario de prueba específico para el aula Q4/0003 (Planta 0)
+ * Cubre de forma explícita las franjas de 8:30 a 14:30, la pausa hasta las 15:00
+ * y de 15:00 a 21:00 con fusiones consecutivas reales bajo el contrato contracte-fase2.md.
+ */
+function getQ40003CustomSchedule(data, versionId) {
+  return {
+    idVersio: versionId,
+    setmana: '2026-W45',
+    dies: [{ dia: 'L', data: data }],
+    filtre: { aula: 'Q4/0003' },
+    calendari: [],
+    items: [
+      // 08:30 - 09:30 (Càlcul I - Franja 1 de 2 consecutivas)
+      {
+        idSessio: 'S-Q40003-01',
+        data: data,
+        dia: 'L',
+        hIni: '08:30',
+        hFi: '09:30',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240012', nom: 'Càlcul I' },
+        grup: { idGrup: '240012·TE/450', grup: 'TE/450', tipus: 'TE' },
+        alumnes: 65,
+        profes: ['D102 - Dra. Marta Vila'],
+        cohorts: ['GEI:1r'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+      // 09:30 - 10:30 (Càlcul I - Franja 2 de 2 consecutivas -> Fusión visual de 08:30 a 10:30)
+      {
+        idSessio: 'S-Q40003-02',
+        data: data,
+        dia: 'L',
+        hIni: '09:30',
+        hFi: '10:30',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240012', nom: 'Càlcul I' },
+        grup: { idGrup: '240012·TE/450', grup: 'TE/450', tipus: 'TE' },
+        alumnes: 65,
+        profes: ['D102 - Dra. Marta Vila'],
+        cohorts: ['GEI:1r'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+
+      // 10:30 - 11:30: Hueco libre / disponible
+
+      // 11:30 - 12:30 (Programació I - Franja 1 de 2 consecutivas)
+      {
+        idSessio: 'S-Q40003-03',
+        data: data,
+        dia: 'L',
+        hIni: '11:30',
+        hFi: '12:30',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240013', nom: 'Programació I' },
+        grup: { idGrup: '240013·PLAB/450', grup: 'PLAB/450', tipus: 'PLAB' },
+        alumnes: 45,
+        profes: ['D103 - Dr. Albert Soler'],
+        cohorts: ['GEI:1r'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+      // 12:30 - 13:30 (Programació I - Franja 2 de 2 consecutivas -> Fusión visual de 11:30 a 13:30)
+      {
+        idSessio: 'S-Q40003-04',
+        data: data,
+        dia: 'L',
+        hIni: '12:30',
+        hFi: '13:30',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240013', nom: 'Programació I' },
+        grup: { idGrup: '240013·PLAB/450', grup: 'PLAB/450', tipus: 'PLAB' },
+        alumnes: 45,
+        profes: ['D103 - Dr. Albert Soler'],
+        cohorts: ['GEI:1r'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+      // 13:30 - 14:30 (Àlgebra Lineal - 1 hora individual)
+      {
+        idSessio: 'S-Q40003-05',
+        data: data,
+        dia: 'L',
+        hIni: '13:30',
+        hFi: '14:30',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240021', nom: 'Àlgebra Lineal' },
+        grup: { idGrup: '240021·SEM/450', grup: 'SEM/450', tipus: 'SEM' },
+        alumnes: 30,
+        profes: ['D104 - Dr. Carles Puig'],
+        cohorts: ['GEI:1r'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+
+      // 14:30 - 15:00: FRANJA GRIS (PAUSA / ALMUERZO) - Se muestra automáticamente
+
+      // 15:00 - 16:00 (Estructures de Dades - 1 hora individual)
+      {
+        idSessio: 'S-Q40003-06',
+        data: data,
+        dia: 'L',
+        hIni: '15:00',
+        hFi: '16:00',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240022', nom: 'Estructures de Dades' },
+        grup: { idGrup: '240022·TE/450', grup: 'TE/450', tipus: 'TE' },
+        alumnes: 55,
+        profes: ['D105 - Dra. Nuria Riera'],
+        cohorts: ['GEI:2n'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+      // 16:00 - 17:00 (Sistemes Operatius - Franja 1 de 2 consecutivas)
+      {
+        idSessio: 'S-Q40003-07',
+        data: data,
+        dia: 'L',
+        hIni: '16:00',
+        hFi: '17:00',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240023', nom: 'Sistemes Operatius' },
+        grup: { idGrup: '240023·PLAB/450', grup: 'PLAB/450', tipus: 'PLAB' },
+        alumnes: 42,
+        profes: ['D106 - Dr. Jordi Mas'],
+        cohorts: ['GEI:2n'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+      // 17:00 - 18:00 (Sistemes Operatius - Franja 2 de 2 consecutivas -> Fusión visual de 16:00 a 18:00)
+      {
+        idSessio: 'S-Q40003-08',
+        data: data,
+        dia: 'L',
+        hIni: '17:00',
+        hFi: '18:00',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240023', nom: 'Sistemes Operatius' },
+        grup: { idGrup: '240023·PLAB/450', grup: 'PLAB/450', tipus: 'PLAB' },
+        alumnes: 42,
+        profes: ['D106 - Dr. Jordi Mas'],
+        cohorts: ['GEI:2n'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+
+      // 18:00 - 19:00: Hueco libre / disponible
+
+      // 19:00 - 20:00 (Bases de Dades - Franja 1 de 2 consecutivas)
+      {
+        idSessio: 'S-Q40003-09',
+        data: data,
+        dia: 'L',
+        hIni: '19:00',
+        hFi: '20:00',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240031', nom: 'Bases de Dades' },
+        grup: { idGrup: '240031·TE/450', grup: 'TE/450', tipus: 'TE' },
+        alumnes: 50,
+        profes: ['D107 - Dra. Elena Grau'],
+        cohorts: ['GEI:2n'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      },
+      // 20:00 - 21:00 (Bases de Dades - Franja 2 de 2 consecutivas -> Fusión visual de 19:00 a 21:00)
+      {
+        idSessio: 'S-Q40003-10',
+        data: data,
+        dia: 'L',
+        hIni: '20:00',
+        hFi: '21:00',
+        duradaMin: 60,
+        aula: 'Q4/0003',
+        assignatura: { codi: '240031', nom: 'Bases de Dades' },
+        grup: { idGrup: '240031·TE/450', grup: 'TE/450', tipus: 'TE' },
+        alumnes: 50,
+        profes: ['D107 - Dra. Elena Grau'],
+        cohorts: ['GEI:2n'],
+        idCompartida: null,
+        fixadaMotiu: null,
+        moguda: false,
+        canviAula: false,
+        recuperada: false
+      }
+    ],
+    truncat: false
+  };
+}
+
+/**
  * Genera un conjunto de sesiones en formato exacto de contracte-fase2.md
  * Garantiza la presencia de franjas consecutivas con el mismo id/código para probar la fusión visual.
  */
 export function generateMockParrillaResponse(aula, data = '2026-11-07', versionId = 1) {
+  // Horario de prueba explícito para Q4/0003
+  if (aula === 'Q4/0003' || aula?.replace(/[\s\-_]/g, '').toUpperCase().includes('Q4/0003')) {
+    return getQ40003CustomSchedule(data, versionId);
+  }
+
   const seed = hashString(`${aula}-${data}`);
   const items = [];
 
@@ -312,3 +544,4 @@ export async function getRoomSchedule(aula, data = '2026-11-07', versionId = 1) 
   const mockData = generateMockParrillaResponse(aula, data, versionId);
   return { data: mockData, source: 'mock-contract' };
 }
+

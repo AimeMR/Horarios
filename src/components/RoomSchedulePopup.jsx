@@ -412,3 +412,4 @@ function SlotCard({ block, getTipusBadgeClass }) {
     </div>
   );
 }
+
