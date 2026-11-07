@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useFilterCategories } from '../services/useFilterCategories';
-import { getWeekInfo, getAdjacentWeek, SEMESTER_WEEKS } from '../services/scheduleFilterService';
+import { getWeekInfo } from '../services/scheduleFilterService';
 
 export default function Sidebar({
   isOpen,
@@ -121,92 +121,22 @@ export default function Sidebar({
 
           {openSections.date && (
             <div className="filter-dropdown-content">
-              {/* Tarjeta de visualización de la semana seleccionada */}
-              <div className="week-highlight-card">
-                <div className="week-highlight-header">
-                  <span className="week-highlight-title">
-                    {getWeekInfo(filters.week)?.badgeLabel || 'Cualquier semana del curso'}
-                  </span>
+              {/* Único sistema: indicar semana en calendario */}
+              <div className="filter-subgroup">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label className="filter-sublabel" htmlFor="week-calendar-input" style={{ marginBottom: 0 }}>
+                    Indicar semana en calendario
+                  </label>
                   {filters.week && (
                     <button
                       type="button"
-                      className="link-clear-week-btn"
+                      style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}
                       onClick={() => onFilterChange('week', '')}
                     >
                       Quitar semana
                     </button>
                   )}
                 </div>
-                <div className="week-highlight-dates">
-                  {getWeekInfo(filters.week)
-                    ? `Del lunes ${getWeekInfo(filters.week).monday.split('-').reverse().join('/')} al viernes ${getWeekInfo(filters.week).friday.split('-').reverse().join('/')}`
-                    : 'Horarios aplicables a todo el semestre'}
-                </div>
-
-                {/* Tira visual de los 5 días lectivos de la semana */}
-                {getWeekInfo(filters.week) && (
-                  <div className="week-days-visual-track" aria-label="Días lectivos de la semana">
-                    {getWeekInfo(filters.week).days.map((d) => (
-                      <div key={d.key} className="week-day-track-pill">
-                        <span className="day-track-name">{d.name.substring(0, 3)}</span>
-                        <span className="day-track-date">{d.shortDate}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Selector de semanas del cuatrimestre */}
-              <div className="filter-subgroup">
-                <label className="filter-sublabel" htmlFor="week-select">Seleccionar semana del curso</label>
-                <div className="select-wrapper">
-                  <select
-                    id="week-select"
-                    className="form-control"
-                    value={filters.week || ''}
-                    onChange={(e) => onFilterChange('week', e.target.value)}
-                  >
-                    <option value="">Todas las semanas</option>
-                    {SEMESTER_WEEKS.map((w) => (
-                      <option key={w.isoWeek} value={w.isoWeek}>
-                        {w.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Botonera de navegación rápida entre semanas */}
-              <div className="week-quick-nav-bar">
-                <button
-                  type="button"
-                  className="quick-week-btn"
-                  onClick={() => onFilterChange('week', getAdjacentWeek(filters.week || '2026-W45', -1))}
-                  title="Semana anterior"
-                >
-                  ◀ Anterior
-                </button>
-                <button
-                  type="button"
-                  className="quick-week-btn current-week-btn"
-                  onClick={() => onFilterChange('week', '2026-W45')}
-                  title="Semana actual (W45)"
-                >
-                  Semana actual
-                </button>
-                <button
-                  type="button"
-                  className="quick-week-btn"
-                  onClick={() => onFilterChange('week', getAdjacentWeek(filters.week || '2026-W45', 1))}
-                  title="Semana siguiente"
-                >
-                  Siguiente ▶
-                </button>
-              </div>
-
-              {/* Entrada de tipo week para seleccionar cualquier semana del año */}
-              <div className="filter-subgroup" style={{ marginTop: '10px' }}>
-                <label className="filter-sublabel" htmlFor="week-calendar-input">O indicar semana en calendario</label>
                 <input
                   type="week"
                   id="week-calendar-input"
@@ -216,7 +146,15 @@ export default function Sidebar({
                 />
               </div>
 
-              <span className="filter-hint">El horario universitario se imparte en semanas completas (Lunes a Viernes)</span>
+              {getWeekInfo(filters.week) && (
+                <div className="week-highlight-dates" style={{ marginTop: '2px', color: '#0369a1', fontWeight: 600, fontSize: '0.75rem' }}>
+                  Semana {getWeekInfo(filters.week).week} ({getWeekInfo(filters.week).rangeLabel}): del lunes {getWeekInfo(filters.week).monday.split('-').reverse().join('/')} al viernes {getWeekInfo(filters.week).friday.split('-').reverse().join('/')}
+                </div>
+              )}
+
+              <span className="filter-hint">
+                Selecciona la semana en el calendario para ver el horario completo de Lunes a Viernes
+              </span>
             </div>
           )}
         </div>
