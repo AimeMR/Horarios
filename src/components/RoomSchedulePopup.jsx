@@ -99,11 +99,15 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
   const { t, translateSubject } = useLanguage();
   const [scheduleData, setScheduleData] = useState(null);
 
+  // Información de la semana seleccionada para mostrar fechas y cabeceras exactas
+  const selectedWeek = appliedFilters?.week || scheduleData?.setmana || '2026-W45';
+  const weekInfo = useMemo(() => getWeekInfo(selectedWeek), [selectedWeek]);
+
   useEffect(() => {
     let isMounted = true;
-    getRoomSchedule(room).then((result) => {
+    getRoomSchedule(room, selectedWeek).then((result) => {
       if (isMounted) {
-        setScheduleData(result.data);
+        setScheduleData(result.data || { items: [], idVersio: 1, setmana: selectedWeek });
       }
     });
 
@@ -118,11 +122,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
       isMounted = false;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [room, onClose]);
-
-  // Información de la semana seleccionada para mostrar fechas y cabeceras exactas
-  const selectedWeek = appliedFilters?.week || scheduleData?.setmana || '2026-W45';
-  const weekInfo = useMemo(() => getWeekInfo(selectedWeek), [selectedWeek]);
+  }, [room, selectedWeek, onClose]);
 
   // Asignación dinámica, única y determinista de colores por asignatura para este horario
   const subjectThemeMap = useMemo(() => {
