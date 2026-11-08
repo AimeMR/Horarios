@@ -1,0 +1,5 @@
+activitat_id,assignatura,tipus,n_sessions,setmana_primera,setmana_ultima,alumnes,aules_partida,sessions_sense_aula,titulacions_curs,torn_requerit,fixada,docents
+A1,Assig1,TE,2,2026-W38,2026-W39,30,Q1/1011,0,GED:1r,mati,,D001
+A2,Assig1,PAUL,1,2026-W38,2026-W38,15,Q1/1012,0,GED:1r,mati,,D002
+A3,Assig2,TE,1,2026-W38,2026-W38,25,Q1/1013,0,GED:3r,tarda,,D003
+A4,Assig3,PLAB,1,2026-W38,2026-W38,12,Q5/0001,0,GED:1r,mati,R7: PLAB,D004

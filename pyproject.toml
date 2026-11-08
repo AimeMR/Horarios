@@ -1,13 +1,20 @@
 [project]
 name = "horaris-extractor"
 version = "0.1.0"
-description = "CLI que aplica migraciones SQLite, carga los CSV del paquete y exporta propuestas de horario."
+description = "Extractor SQLite + solver CP-SAT (OR-Tools) para el reto de horarios."
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requires-python = ">=3.11"
+dependencies = [
+  "ortools>=9.10,<10",
+  "fastapi>=0.115,<1",
+  "uvicorn[standard]>=0.32,<1",
+  "pydantic>=2.9,<3",
+  "httpx>=0.28,<1",
+]
 
 [project.scripts]
 extractor = "extractor.__main__:main"
+horaris-solver = "horaris_solver.cli:main"
 
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13"]
@@ -54,8 +61,14 @@ exclude = [
     '^chatbot/',
 ]
 
+[[tool.mypy.overrides]]
+module = ["ortools", "ortools.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-q"
 
 [tool.bandit]

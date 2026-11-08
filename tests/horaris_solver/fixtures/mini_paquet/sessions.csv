@@ -1,0 +1,6 @@
+id_sessio,activitat_id,id_compartida,codi,assignatura,tipus,grup,semestre,data,setmana,dia,h_ini,h_fi,durada_min,alumnes,capacitat_grup,aula_partida,aules_addicionals_partida,plans,titulacions_curs,dc,torn_requerit,fixada,docents,alumnes_origen,sense_espai
+S00001,A1,,COD1,Assig1,TE,TE/11,C/1,2026-09-14,2026-W38,L,08:30,10:30,120,30,40,Q1/1011,,1394,GED:1r,,mati,,D001,sigma,0
+S00002,A1,,COD1,Assig1,TE,TE/11,C/1,2026-09-21,2026-W39,L,08:30,10:30,120,30,40,Q1/1011,,1394,GED:1r,,mati,,D001,sigma,0
+S00003,A2,,COD1,Assig1,PAUL,PAUL/111,C/1,2026-09-14,2026-W38,M,10:30,12:30,120,15,20,Q1/1012,,1394,GED:1r,,mati,,D002,estimat,0
+S00004,A3,,COD2,Assig2,TE,TE/31,C/1,2026-09-14,2026-W38,L,15:00,17:00,120,25,40,Q1/1013,,1394,GED:3r,,tarda,,D003,sigma,0
+S00005,A4,,COD3,Assig3,PLAB,PLAB/111,C/1,2026-09-15,2026-W38,M,08:30,10:30,120,12,20,Q5/0001,,1394,GED:1r,,mati,R7: PLAB,D004,sigma,0

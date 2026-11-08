@@ -140,6 +140,46 @@ Endpoints (todos `GET`):
 | `/versions/:id/parrilla` | `setmana` y al menos uno de `aula`, `cohort`, `profe`, `assignatura`, `grup` |
 | `/versions/:id/ocupacio` | `setmana`, `tipus` |
 
+## Solver (OR-Tools CP-SAT, `horaris_solver/`)
+
+Estrategias: `hybrid` (greedy + CP-SAT `AddHint`; se queda el greedy si CP-SAT es UNKNOWN/INFEASIBLE), `greedy`, `cpsat`.
+
+CSV (sin BD):
+
+```bash
+uv run python -m horaris_solver solve \
+  --paquet ./repte-horaris-escola/paquet \
+  --out ./out/proposta_s1.csv \
+  --semestre 1 \
+  --strategy hybrid \
+  --max-time 300
+```
+
+Desde SQLite:
+
+```bash
+uv run --env-file .env python -m horaris_solver solve \
+  --db ./horaris.db \
+  --out ./out/proposta_s1.csv \
+  --semestre 1 \
+  --curs 1r \
+  --strategy hybrid \
+  --max-time 180
+```
+
+Lots S1 (1r+2n mañana, 3r+4t/M/? tarde). Si el primario de mañana falla, corre la escalera diagnóstica (1r, 2n sin GEET/GEST, GEET+GEST):
+
+```bash
+uv run python scripts/run_s1_batches.py \
+  --db ./horaris.db \
+  --out-dir ./out/s1 \
+  --conclusions ./out/s1/conclusions.md \
+  --strategy hybrid \
+  --max-time 180
+```
+
+Ventanas: mañana 08:30–14:30, tarde 15:00–21:00.
+
 ## Frontend (Visor de Planos y Horarios en React)
 
 Aplicación web interactiva en React + Vite (`frontend/`) con visor de mapas SVG por plantas (0 a 3), horarios semanales de aulas estilo Excel, filtros académicos avanzados (titulación, curso, asignatura, grupo), soporte trilingüe (Castellano, Català, English) y chatbot asistente de IA local.
