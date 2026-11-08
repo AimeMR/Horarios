@@ -3,6 +3,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import FloorSelector from './components/FloorSelector';
 import MapViewer from './components/MapViewer';
+import ChatBotWidget from './components/ChatBotWidget';
 import { evaluateAllFloorsFilters } from './services/scheduleFilterService';
 
 export default function App() {
@@ -121,6 +122,9 @@ export default function App() {
           />
         </main>
       </div>
+
+      {/* CHATBOT FLOTANTE ABAJO A LA DERECHA */}
+      <ChatBotWidget />
     </div>
   );
 }
