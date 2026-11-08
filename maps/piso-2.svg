@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3500 2500" width="3500" height="2500">
+  <defs>
+    <style>
+      .bg { fill: #FFFFFF; }
+      .wall { fill: #FFFFFF; stroke: #111827; stroke-width: 4.5; stroke-linejoin: miter; stroke-linecap: square; }
+      .room-label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 25px; font-weight: 700; fill: #111827; text-anchor: middle; dominant-baseline: central; letter-spacing: 0.5px; }
+      .room-label-sm { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 21px; font-weight: 700; fill: #111827; text-anchor: middle; dominant-baseline: central; letter-spacing: 0.3px; }
+    </style>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="3500" height="2500" class="bg" />
+
+  <!-- ==================== COLUMNA / PASILLO VERTICAL OESTE ==================== -->
+  <rect x="1180" y="100" width="270" height="1650" class="wall" />
+
+  <!-- ==================== BLOQUE Q4 ==================== -->
+  <g id="block-q4">
+    <!-- Salas -->
+    <rect x="1450" y="100" width="230" height="210" class="wall" />
+    <text x="1565" y="205" class="room-label">Q4/1003</text>
+
+    <rect x="1680" y="100" width="230" height="210" class="wall" />
+    <text x="1795" y="205" class="room-label">Q4/1005</text>
+
+    <rect x="1910" y="100" width="230" height="210" class="wall" />
+    <text x="2025" y="205" class="room-label">Q4/1009</text>
+
+    <rect x="2140" y="100" width="230" height="210" class="wall" />
+    <text x="2255" y="205" class="room-label">Q4/1013</text>
+
+    <!-- Pasillo inferior Q4 -->
+    <rect x="1450" y="310" width="920" height="70" class="wall" />
+  </g>
+
+  <!-- ==================== BLOQUE Q3 ==================== -->
+  <g id="block-q3">
+    <!-- Salas -->
+    <rect x="1450" y="490" width="280" height="210" class="wall" />
+    <text x="1590" y="595" class="room-label">Q3/1003</text>
+
+    <rect x="1730" y="490" width="360" height="210" class="wall" />
+    <text x="1910" y="595" class="room-label">Q3/1007</text>
+
+    <rect x="2090" y="490" width="280" height="210" class="wall" />
+    <text x="2230" y="595" class="room-label">Q3/1011</text>
+
+    <!-- Pasillo inferior Q3 -->
+    <rect x="1450" y="700" width="920" height="70" class="wall" />
+  </g>
+
+  <!-- ==================== BLOQUE Q6 (ESTE SUPERIOR) ==================== -->
+  <g id="block-q6">
+    <!-- Salas -->
+    <rect x="2370" y="710" width="440" height="210" class="wall" />
+    <text x="2590" y="815" class="room-label">Q6/1006</text>
+
+    <rect x="2810" y="710" width="210" height="210" class="wall" />
+    <text x="2915" y="815" class="room-label">Q6/1011</text>
+
+    <rect x="3020" y="710" width="210" height="210" class="wall" />
+    <text x="3125" y="815" class="room-label">Q6/1012</text>
+
+    <!-- Pasillo inferior Q6 -->
+    <rect x="2370" y="920" width="860" height="70" class="wall" />
+  </g>
+
+  <!-- ==================== BLOQUE Q2 ==================== -->
+  <g id="block-q2">
+    <!-- Salas -->
+    <rect x="1450" y="940" width="230" height="210" class="wall" />
+    <text x="1565" y="1045" class="room-label">Q2/1003</text>
+
+    <rect x="1680" y="940" width="230" height="210" class="wall" />
+    <text x="1795" y="1045" class="room-label">Q2/1005</text>
+
+    <rect x="1910" y="940" width="230" height="210" class="wall" />
+    <text x="2025" y="1045" class="room-label">Q2/1009</text>
+
+    <rect x="2140" y="940" width="230" height="210" class="wall" />
+    <text x="2255" y="1045" class="room-label">Q2/1013</text>
+
+    <!-- Pasillo inferior Q2 -->
+    <rect x="1450" y="1150" width="920" height="70" class="wall" />
+  </g>
+
+  <!-- ==================== BLOQUE Q5 (ESTE INFERIOR) ==================== -->
+  <g id="block-q5">
+    <!-- Salas -->
+    <rect x="2370" y="1150" width="172" height="210" class="wall" />
+    <text x="2456" y="1255" class="room-label-sm">Q5/1005</text>
+
+    <rect x="2542" y="1150" width="172" height="210" class="wall" />
+    <text x="2628" y="1255" class="room-label-sm">Q5/1006</text>
+
+    <rect x="2714" y="1150" width="172" height="210" class="wall" />
+    <text x="2800" y="1255" class="room-label-sm">Q5/1009</text>
+
+    <rect x="2886" y="1150" width="172" height="210" class="wall" />
+    <text x="2972" y="1255" class="room-label-sm">Q5/1010</text>
+
+    <rect x="3058" y="1150" width="172" height="210" class="wall" />
+    <text x="3144" y="1255" class="room-label-sm">Q5/1011</text>
+
+    <!-- Pasillo inferior Q5 -->
+    <rect x="2370" y="1360" width="860" height="70" class="wall" />
+  </g>
+
+  <!-- ==================== BLOQUE Q1 ==================== -->
+  <g id="block-q1">
+    <!-- Salas -->
+    <rect x="1450" y="1380" width="280" height="210" class="wall" />
+    <text x="1590" y="1485" class="room-label">Q1/1003</text>
+
+    <rect x="1730" y="1380" width="360" height="210" class="wall" />
+    <text x="1910" y="1485" class="room-label">Q1/1005</text>
+
+    <rect x="2090" y="1380" width="280" height="210" class="wall" />
+    <text x="2230" y="1485" class="room-label">Q1/1007</text>
+
+    <!-- Pasillo inferior Q1 -->
+    <rect x="1450" y="1590" width="920" height="70" class="wall" />
+  </g>
+
+  <!-- ==================== ALA SUR / PASILLO PRINCIPAL QC ==================== -->
+  <g id="block-qc">
+    <!-- Gran contenedor del pasillo QC -->
+    <rect x="150" y="1750" width="3200" height="600" class="wall" />
+
+    <!-- QC/1086 (Noroeste) -->
+    <rect x="150" y="1750" width="350" height="210" class="wall" />
+    <text x="325" y="1855" class="room-label">QC/1086</text>
+
+    <!-- QC/1088 (Suroeste) -->
+    <rect x="150" y="2140" width="350" height="210" class="wall" />
+    <text x="325" y="2245" class="room-label">QC/1088</text>
+
+    <!-- QC/1031 (Centro Norte) -->
+    <rect x="1850" y="1750" width="350" height="210" class="wall" />
+    <text x="2025" y="1855" class="room-label">QC/1031</text>
+
+    <!-- QC/1033 (Centro Sur) -->
+    <rect x="1850" y="2140" width="350" height="210" class="wall" />
+    <text x="2025" y="2245" class="room-label">QC/1033</text>
+
+    <!-- QC/1041 (Centro Sur Este) -->
+    <rect x="2200" y="2140" width="350" height="210" class="wall" />
+    <text x="2375" y="2245" class="room-label">QC/1041</text>
+  </g>
+</svg>
