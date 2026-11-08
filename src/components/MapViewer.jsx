@@ -4,6 +4,7 @@ import Floor1Svg from './Floor1Svg';
 import Floor2Svg from './Floor2Svg';
 import Floor3Svg from './Floor3Svg';
 import RoomSchedulePopup from './RoomSchedulePopup';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function MapViewer({
   currentFloor,
@@ -13,6 +14,7 @@ export default function MapViewer({
   appliedFilters,
   matchingRooms = []
 }) {
+  const { t } = useLanguage();
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -266,8 +268,8 @@ export default function MapViewer({
             type="button"
             className="zoom-btn"
             onClick={handleZoomIn}
-            title="Acercar mapa (+)"
-            aria-label="Acercar mapa"
+            title={t('map.zoomIn')}
+            aria-label={t('map.zoomIn')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -279,8 +281,8 @@ export default function MapViewer({
             type="button"
             className="zoom-btn zoom-level-btn"
             onClick={handleResetZoom}
-            title="Restablecer zoom al 100%"
-            aria-label="Restablecer zoom"
+            title={t('map.resetZoom')}
+            aria-label={t('map.resetZoom')}
           >
             <span>{Math.round(zoom * 100)}%</span>
           </button>
@@ -289,8 +291,8 @@ export default function MapViewer({
             type="button"
             className="zoom-btn"
             onClick={handleZoomOut}
-            title="Alejar mapa (-)"
-            aria-label="Alejar mapa"
+            title={t('map.zoomOut')}
+            aria-label={t('map.zoomOut')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -301,8 +303,8 @@ export default function MapViewer({
             type="button"
             className="zoom-btn"
             onClick={handleResetZoom}
-            title="Ajustar y centrar plano"
-            aria-label="Ajustar plano"
+            title={t('map.fitPlan')}
+            aria-label={t('map.fitPlan')}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
@@ -312,7 +314,7 @@ export default function MapViewer({
 
         {/* Indicador de arrastre */}
         <div className="map-pan-hint">
-          <span>Rueda para zoom • Arrastra para moverte por el plano</span>
+          <span>{t('map.panHint')}</span>
         </div>
 
         {/* Pop-up modal de horarios semanales (centrado en pantalla, estilo tabla Excel) */}

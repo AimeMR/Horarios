@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getRoomSchedule } from '../services/scheduleService';
 import { matchesSessionFilter, hasActiveFilters, getWeekInfo } from '../services/scheduleFilterService';
+import { useLanguage } from '../context/LanguageContext';
 
 const DAYS = [
   { key: 'L', label: 'Lunes' },
@@ -95,6 +96,7 @@ function buildDaySlotCells(slotDefinitions, daySessions) {
 }
 
 export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
+  const { t, translateSubject } = useLanguage();
   const [scheduleData, setScheduleData] = useState(null);
 
   useEffect(() => {
@@ -212,16 +214,16 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
         <div className="schedule-modal-header">
           <div className="modal-header-titles">
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div className="modal-header-badge">Aula {room}</div>
+              <div className="modal-header-badge">{t('schedule.roomBadge', room)}</div>
               {hasActiveFilters(appliedFilters) && (
                 <span className="modal-filter-tag">
-                  Filtro activo (franjas coincidentes destacadas)
+                  {t('schedule.activeFilter')}
                 </span>
               )}
             </div>
-            <h2 className="modal-title">Horario Semanal</h2>
+            <h2 className="modal-title">{t('schedule.title')}</h2>
             <span className="modal-subtitle">
-              {weekInfo ? `Semana ${weekInfo.week} (${weekInfo.rangeLabel}) • Lunes a Viernes` : 'Lunes a Viernes • 08:30 a 21:00'}
+              {t('schedule.subtitle', weekInfo?.week, weekInfo?.rangeLabel)}
             </span>
           </div>
 
@@ -229,8 +231,8 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
             type="button"
             className="modal-close-x-btn"
             onClick={onClose}
-            aria-label="Cerrar horario"
-            title="Cerrar (Esc)"
+            aria-label={t('schedule.close')}
+            title={t('schedule.close')}
           >
             ✕
           </button>
@@ -241,18 +243,18 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
           {!weeklyGrid ? (
             <div className="modal-loading-box">
               <div className="excel-spinner"></div>
-              <span>Cargando horario semanal del aula {room}...</span>
+              <span>{t('schedule.loading', room)}</span>
             </div>
           ) : (
             <table className="excel-schedule-table">
               <thead>
                 <tr>
-                  <th className="excel-th excel-th-time">Hora</th>
+                  <th className="excel-th excel-th-time">{t('schedule.timeColumn')}</th>
                   {DAYS.map((day, idx) => {
                     const dayDate = weekInfo?.days?.[idx]?.shortDate;
                     return (
                       <th key={day.key} className="excel-th excel-th-day">
-                        <div className="th-day-name">{day.label}</div>
+                        <div className="th-day-name">{t(`schedule.days.${day.key}`)}</div>
                         {dayDate && <div className="th-day-date">{dayDate}</div>}
                       </th>
                     );
@@ -295,7 +297,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
                         >
                           <div className="cell-content">
                             <div className="cell-subject-name" style={{ color: theme.text }}>
-                              {s.assignatura?.nom}
+                              {translateSubject(s.assignatura?.codi, s.assignatura?.nom)}
                             </div>
                             <div className="cell-subline">
                               <span
@@ -304,7 +306,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
                               >
                                 {s.grup?.grup}
                               </span>
-                              <span className="cell-subject-code">Cód. {s.assignatura?.codi}</span>
+                              <span className="cell-subject-code">{t('schedule.codePrefix')} {s.assignatura?.codi}</span>
                             </div>
                             {s.profes && s.profes[0] && (
                               <div className="cell-prof">{s.profes[0]}</div>
@@ -314,7 +316,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
                                 className="cell-merged-indicator"
                                 style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
                               >
-                                {cell.rowSpan}h combinadas
+                                {t('schedule.combinedHours', cell.rowSpan)}
                               </div>
                             )}
                           </div>
@@ -326,9 +328,9 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
 
                 {/* 2. FRANJA GRIS: 14:30 A 15:00 (PAUSA / ALMUERZO) */}
                 <tr className="excel-pause-row">
-                  <td className="excel-time-cell excel-pause-time">14:30 – 15:00</td>
+                  <td className="excel-time-cell excel-pause-time">{t('schedule.pauseTime')}</td>
                   <td colSpan="5" className="excel-pause-cell">
-                    PAUSA / ALMUERZO
+                    {t('schedule.pauseText')}
                   </td>
                 </tr>
 
@@ -367,7 +369,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
                         >
                           <div className="cell-content">
                             <div className="cell-subject-name" style={{ color: theme.text }}>
-                              {s.assignatura?.nom}
+                              {translateSubject(s.assignatura?.codi, s.assignatura?.nom)}
                             </div>
                             <div className="cell-subline">
                               <span
@@ -376,7 +378,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
                               >
                                 {s.grup?.grup}
                               </span>
-                              <span className="cell-subject-code">Cód. {s.assignatura?.codi}</span>
+                              <span className="cell-subject-code">{t('schedule.codePrefix')} {s.assignatura?.codi}</span>
                             </div>
                             {s.profes && s.profes[0] && (
                               <div className="cell-prof">{s.profes[0]}</div>
@@ -386,7 +388,7 @@ export default function RoomSchedulePopup({ room, onClose, appliedFilters }) {
                                 className="cell-merged-indicator"
                                 style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}
                               >
-                                {cell.rowSpan}h combinadas
+                                {t('schedule.combinedHours', cell.rowSpan)}
                               </div>
                             )}
                           </div>

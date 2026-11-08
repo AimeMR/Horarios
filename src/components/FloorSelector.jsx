@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function FloorSelector({
   currentFloor,
@@ -6,15 +7,10 @@ export default function FloorSelector({
   floorMatchCounts = {},
   hasActiveFilters = false
 }) {
-  const floorDescriptions = {
-    0: 'Planta 0 — Bloques Q1-Q6, Ala Central (QC) & Ala Sur (QP)',
-    1: 'Planta 1 — Bloques Q1-Q6 y Ala Central (QC)',
-    2: 'Planta 2 — Bloques Q5-Q6 y Ala Central (QC)',
-    3: 'Planta 3 — Ala Central Superior (QC)'
-  };
+  const { t } = useLanguage();
 
   return (
-    <section className="floor-navigation-bar" aria-label="Navegación entre plantas">
+    <section className="floor-navigation-bar" aria-label={t('floorSelector.floorPill', currentFloor)}>
       <div className="floor-selector-card">
         {/* Flecha Anterior (deshabilitada en la planta 0) */}
         <button
@@ -22,8 +18,8 @@ export default function FloorSelector({
           className="nav-arrow-btn"
           onClick={() => onSelectFloor(currentFloor - 1)}
           disabled={currentFloor <= 0}
-          aria-label="Ir a la planta anterior"
-          title="Planta anterior"
+          aria-label={t('floorSelector.previousFloor')}
+          title={t('floorSelector.previousFloor')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"></polyline>
@@ -43,19 +39,19 @@ export default function FloorSelector({
                   type="button"
                   className={`floor-pill ${currentFloor === num ? 'active' : ''}`}
                   onClick={() => onSelectFloor(num)}
-                  aria-label={`Planta ${num}`}
+                  aria-label={t('floorSelector.floorPill', num)}
                 >
                   <span className="pill-number">{num}</span>
-                  <span className="pill-text">Planta {num}</span>
+                  <span className="pill-text">{t('floorSelector.floorPill', num)}</span>
                 </button>
 
                 {showAlert && (
                   <div
                     className={`floor-alert-badge ${isOtherFloor ? 'is-other-floor' : 'is-current-floor'}`}
-                    title={`${count} aula${count > 1 ? 's' : ''} que cumple${count > 1 ? 'n' : ''} el filtro en Planta ${num}`}
+                    title={t('floorSelector.alertTooltip', count, num)}
                   >
                     <span className="alert-icon">⚠️</span>
-                    <span className="alert-count">{count} {count === 1 ? 'aula' : 'aulas'}</span>
+                    <span className="alert-count">{t('floorSelector.alertText', count)}</span>
                   </div>
                 )}
               </div>
@@ -69,8 +65,8 @@ export default function FloorSelector({
           className="nav-arrow-btn"
           onClick={() => onSelectFloor(currentFloor + 1)}
           disabled={currentFloor >= 3}
-          aria-label="Ir a la planta siguiente"
-          title="Planta siguiente"
+          aria-label={t('floorSelector.nextFloor')}
+          title={t('floorSelector.nextFloor')}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6"></polyline>
@@ -80,7 +76,7 @@ export default function FloorSelector({
 
       <div className="floor-meta-badge">
         <span className="meta-dot"></span>
-        <span>{floorDescriptions[currentFloor] || `Planta ${currentFloor}`}</span>
+        <span>{t(`floorSelector.floorDescriptions.${currentFloor}`)}</span>
       </div>
     </section>
   );
