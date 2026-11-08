@@ -32,11 +32,7 @@ def activities_share_iso_week(
 ) -> bool:
     left_sessions = [data.sessions[sid] for sid in data.activities[left_id].session_ids]
     right_sessions = [data.sessions[sid] for sid in data.activities[right_id].session_ids]
-    return any(
-        same_iso_week(a.session_date, b.session_date)
-        for a in left_sessions
-        for b in right_sessions
-    )
+    return any(same_iso_week(a.session_date, b.session_date) for a in left_sessions for b in right_sessions)
 
 
 def aturades_by_date(data: TimetableData) -> dict[date, list[tuple[int, int]]]:
@@ -73,9 +69,7 @@ def aturada_windows_for_day(
         return []
     # Exception: already on that aturada day in partida — hour changes same day allowed.
     if new_date == session.session_date:
-        original_hit = any(
-            session.start_min < end and session.end_min > start for start, end in windows
-        )
+        original_hit = any(session.start_min < end and session.end_min > start for start, end in windows)
         if original_hit:
             return []
     return windows

@@ -26,14 +26,8 @@ def test_phase1_accepts_hints_and_stops_after_first_feasible() -> None:
     data = CsvTimetableSource(FIXTURE).load()
     hints = Phase1Result(
         True,
-        {
-            activity.id: data.sessions[activity.session_ids[0]].day
-            for activity in data.activities.values()
-        },
-        {
-            activity.id: data.sessions[activity.session_ids[0]].start_min
-            for activity in data.activities.values()
-        },
+        {activity.id: data.sessions[activity.session_ids[0]].day for activity in data.activities.values()},
+        {activity.id: data.sessions[activity.session_ids[0]].start_min for activity in data.activities.values()},
         "GREEDY",
         "partida as warm-start hints",
     )

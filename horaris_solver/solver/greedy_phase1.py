@@ -27,12 +27,8 @@ def _candidate_slots(activity: Activity, data: TimetableData) -> list[tuple[int,
     scored: list[tuple[int, int, int]] = []
     for day_idx in range(5):
         for start in slots:
-            dist = abs(start - template.start_min) + 1000 * abs(
-                day_idx - day_index(template.day)
-            )
-            if (day_idx, start) == partida and start_fits_turn(
-                start, activity.duration_min, activity.turn
-            ):
+            dist = abs(start - template.start_min) + 1000 * abs(day_idx - day_index(template.day))
+            if (day_idx, start) == partida and start_fits_turn(start, activity.duration_min, activity.turn):
                 dist = -1
             scored.append((dist, day_idx, start))
     scored.sort()
@@ -74,11 +70,7 @@ def _sync_shared(
     placed: dict[str, tuple[int, int]],
     data: TimetableData,
 ) -> None:
-    shared_ids = {
-        data.sessions[sid].shared_id
-        for sid in activity.session_ids
-        if data.sessions[sid].shared_id
-    }
+    shared_ids = {data.sessions[sid].shared_id for sid in activity.session_ids if data.sessions[sid].shared_id}
     if not shared_ids:
         return
     for session in data.sessions.values():
@@ -219,9 +211,7 @@ def solve_phase1_greedy(data: TimetableData) -> Phase1Result:
 
     missing = [a.id for a in activities if a.id not in activity_day]
     if missing:
-        return Phase1Result(
-            False, {}, {}, "INFEASIBLE", f"greedy missing activities {missing[:5]}"
-        )
+        return Phase1Result(False, {}, {}, "INFEASIBLE", f"greedy missing activities {missing[:5]}")
 
     return Phase1Result(
         True,

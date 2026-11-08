@@ -161,9 +161,7 @@ def _is_unknown_status(status: object) -> bool:
 def test_repair_unknown_is_not_proven_infeasible(monkeypatch: pytest.MonkeyPatch) -> None:
     fixture = _two_activity_neighborhood()
 
-    def _unknown_solve(
-        self: object, model: object, *args: object, **kwargs: object
-    ) -> int:
+    def _unknown_solve(self: object, model: object, *args: object, **kwargs: object) -> int:
         return int(cp_model.UNKNOWN)
 
     monkeypatch.setattr(repair_mod.cp_model.CpSolver, "Solve", _unknown_solve)
@@ -205,9 +203,7 @@ def test_repair_model_frees_long_duration_blocker(monkeypatch: pytest.MonkeyPatc
     fixture = _neighborhood_fixture()
     captured: list[cp_model.CpModel] = []
 
-    def _capture_solve(
-        self: object, model: cp_model.CpModel, *args: object, **kwargs: object
-    ) -> int:
+    def _capture_solve(self: object, model: cp_model.CpModel, *args: object, **kwargs: object) -> int:
         captured.append(model)
         return int(cp_model.UNKNOWN)
 

@@ -54,15 +54,8 @@ def test_session_matches_titulacions() -> None:
 
 def test_session_matches_filters_combined() -> None:
     cohorts = ("GEI:2n",)
-    assert session_matches_filters(
-        cohorts, cursos=frozenset({"2n"}), titulacions=frozenset({"GEI"})
-    )
-    assert (
-        session_matches_filters(
-            cohorts, cursos=frozenset({"2n"}), titulacions=frozenset({"GEET"})
-        )
-        is False
-    )
+    assert session_matches_filters(cohorts, cursos=frozenset({"2n"}), titulacions=frozenset({"GEI"}))
+    assert session_matches_filters(cohorts, cursos=frozenset({"2n"}), titulacions=frozenset({"GEET"})) is False
 
 
 def test_turn_from_cohorts() -> None:

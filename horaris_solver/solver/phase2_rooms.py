@@ -61,11 +61,7 @@ def _candidates(
     if session.kind == "PLAB" and session.fixed.startswith("R7") and not session.room_partida:
         return [""]
     # Keep partida lab only when day/time were not repaired away from partida.
-    if (
-        session.fixed.startswith("R7")
-        and session.room_partida
-        and _r7_time_unchanged(session, timed)
-    ):
+    if session.fixed.startswith("R7") and session.room_partida and _r7_time_unchanged(session, timed):
         return [session.room_partida]
     out: list[str] = []
     for room in data.rooms.values():
@@ -125,23 +121,15 @@ def _solve_rooms(
 
     session_room: dict[str, cp_model.IntVar] = {}
     needing = [s for s in data.sessions.values() if not s.sense_espai]
-    placed: dict[str, date] = {
-        s.id: _placed_date(s, timed[s.id]) for s in data.sessions.values() if s.id in timed
-    }
+    placed: dict[str, date] = {s.id: _placed_date(s, timed[s.id]) for s in data.sessions.values() if s.id in timed}
 
     for session in needing:
         candidates = _candidates(data, session, timed)
         if not candidates:
             return Phase2Result(False, [], "INFEASIBLE", f"no room candidates for {session.id}")
         domain = [room_index[c] for c in candidates]
-        session_room[session.id] = model.NewIntVarFromDomain(
-            cp_model.Domain.FromValues(domain), f"room_{session.id}"
-        )
-        if (
-            session.fixed.startswith("R7")
-            and session.room_partida in room_index
-            and _r7_time_unchanged(session, timed)
-        ):
+        session_room[session.id] = model.NewIntVarFromDomain(cp_model.Domain.FromValues(domain), f"room_{session.id}")
+        if session.fixed.startswith("R7") and session.room_partida in room_index and _r7_time_unchanged(session, timed):
             model.Add(session_room[session.id] == room_index[session.room_partida])
 
     # No room double-booking on overlapping sessions same calendar DATE
@@ -176,18 +164,13 @@ def _solve_rooms(
                         if placed[session.id] != day_date:
                             continue
                         if not (
-                            assignment.start_min < fringe + 60
-                            and assignment.start_min + session.duration_min > fringe
+                            assignment.start_min < fringe + 60 and assignment.start_min + session.duration_min > fringe
                         ):
                             continue
-                        lit = model.NewBoolVar(
-                            f"occ_{session.id}_{room_code}_{fringe}_{day_date}"
-                        )
+                        lit = model.NewBoolVar(f"occ_{session.id}_{room_code}_{fringe}_{day_date}")
                         eq = session_room[session.id] == room_index[room_code]
                         model.Add(eq).OnlyEnforceIf(lit)
-                        model.Add(
-                            session_room[session.id] != room_index[room_code]
-                        ).OnlyEnforceIf(lit.Not())
+                        model.Add(session_room[session.id] != room_index[room_code]).OnlyEnforceIf(lit.Not())
                         literals.append(lit)
                     if literals:
                         model.AddMaxEquality(used, literals)
@@ -202,21 +185,15 @@ def _solve_rooms(
     for session in needing:
         if session.room_partida in room_index and session.room_partida:
             changed = model.NewBoolVar(f"chg_aula_{session.id}")
-            model.Add(
-                session_room[session.id] != room_index[session.room_partida]
-            ).OnlyEnforceIf(changed)
-            model.Add(
-                session_room[session.id] == room_index[session.room_partida]
-            ).OnlyEnforceIf(changed.Not())
+            model.Add(session_room[session.id] != room_index[session.room_partida]).OnlyEnforceIf(changed)
+            model.Add(session_room[session.id] == room_index[session.room_partida]).OnlyEnforceIf(changed.Not())
             soft_terms.append(changed * WEIGHT_CANVI_AULA)
 
     # Soft: TE↔PAUL consecutive same date — prefer same passadís
     passadis_ids = {code: passadis(code) for code in data.rooms}
     unique_pass = sorted(set(passadis_ids.values()) | {""})
     pass_index = {name: i for i, name in enumerate(unique_pass)}
-    room_to_pass = {
-        room_index[code]: pass_index[passadis_ids[code]] for code in data.rooms
-    }
+    room_to_pass = {room_index[code]: pass_index[passadis_ids[code]] for code in data.rooms}
     room_to_pass[room_index[""]] = pass_index[""]
 
     pass_table = [room_to_pass.get(i, pass_index[""]) for i in range(len(room_index))]

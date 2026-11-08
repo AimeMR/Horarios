@@ -49,9 +49,7 @@ class SqliteTimetableSource:
         try:
             conn.execute("PRAGMA foreign_keys = ON")
             rooms = self._load_rooms(conn)
-            sessions, order = self._load_sessions(
-                conn, semestre=semestre, cursos=cursos, titulacions=titulacions
-            )
+            sessions, order = self._load_sessions(conn, semestre=semestre, cursos=cursos, titulacions=titulacions)
             activities = self._build_activities(sessions)
             calendar = self._load_calendar(conn)
             # Free days from the full semester calendar, not the curs filter —

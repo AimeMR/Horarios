@@ -60,9 +60,7 @@ def session_matches_filters(
     cursos: frozenset[str] | None = None,
     titulacions: frozenset[str] | None = None,
 ) -> bool:
-    return session_matches_cursos(cohorts, cursos) and session_matches_titulacions(
-        cohorts, titulacions
-    )
+    return session_matches_cursos(cohorts, cursos) and session_matches_titulacions(cohorts, titulacions)
 
 
 def turn_from_cohorts(cohorts: tuple[str, ...], fallback: str) -> str:

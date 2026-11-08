@@ -221,9 +221,7 @@ def _run_job(record: JobRecord, output_root: Path, slots: threading.BoundedSemap
         )
         with record.lock:
             if result.ok:
-                record.summary = (
-                    f"ok sessions exported r8_relaxed={result.r8_relaxed}"
-                )
+                record.summary = f"ok sessions exported r8_relaxed={result.r8_relaxed}"
                 record.status = JobStatus.done
             else:
                 record.summary = "solve failed"

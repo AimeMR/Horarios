@@ -12,14 +12,8 @@ def test_hybrid_passes_greedy_hints_to_phase1() -> None:
     data = CsvTimetableSource(FIXTURE).load()
     greedy_hints = Phase1Result(
         True,
-        {
-            activity.id: data.sessions[activity.session_ids[0]].day
-            for activity in data.activities.values()
-        },
-        {
-            activity.id: data.sessions[activity.session_ids[0]].start_min
-            for activity in data.activities.values()
-        },
+        {activity.id: data.sessions[activity.session_ids[0]].day for activity in data.activities.values()},
+        {activity.id: data.sessions[activity.session_ids[0]].start_min for activity in data.activities.values()},
         "GREEDY",
         "greedy ok",
     )

@@ -30,11 +30,7 @@ def plab_blocks(left: Activity, right: Activity) -> bool:
 
 
 def shared_teaching_ids(activity: Activity, data: TimetableData) -> set[str]:
-    return {
-        data.sessions[sid].shared_id
-        for sid in activity.session_ids
-        if data.sessions[sid].shared_id
-    }
+    return {data.sessions[sid].shared_id for sid in activity.session_ids if data.sessions[sid].shared_id}
 
 
 def same_teaching_event(left: Activity, right: Activity, data: TimetableData) -> bool:

@@ -134,9 +134,7 @@ def write_conclusions(report: BatchRunReport, path: Path) -> None:
         )
     lines.extend(["", "## Notes", ""])
     if not report.morning_ok:
-        lines.append(
-            "- Morning primary failed. Ladder CSVs are diagnostic and not jury-mergeable."
-        )
+        lines.append("- Morning primary failed. Ladder CSVs are diagnostic and not jury-mergeable.")
     geet_failed = any(
         (not outcome.ok)
         and outcome.spec.titulacions is not None
@@ -145,12 +143,8 @@ def write_conclusions(report: BatchRunReport, path: Path) -> None:
         for outcome in report.outcomes
     )
     if geet_failed:
-        lines.append(
-            "- GEET/GEST 2n diagnostic failed (INFEASIBLE or UNKNOWN). Recorded; run continued."
-        )
-    lines.append(
-        "- 1r+2n vs 3r+4t share rooms but disjoint turns; do not concat morning ladder CSVs."
-    )
+        lines.append("- GEET/GEST 2n diagnostic failed (INFEASIBLE or UNKNOWN). Recorded; run continued.")
+    lines.append("- 1r+2n vs 3r+4t share rooms but disjoint turns; do not concat morning ladder CSVs.")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

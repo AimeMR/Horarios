@@ -53,23 +53,15 @@ def _load_data(
     if db is not None and paquet is not None:
         raise ValueError("pass either --db or --paquet, not both")
     if db is not None:
-        return SqliteTimetableSource(db).load(
-            semestre=semestre, cursos=cursos, titulacions=titulacions
-        )
+        return SqliteTimetableSource(db).load(semestre=semestre, cursos=cursos, titulacions=titulacions)
     if paquet is not None:
-        return CsvTimetableSource(paquet).load(
-            semestre=semestre, cursos=cursos, titulacions=titulacions
-        )
+        return CsvTimetableSource(paquet).load(semestre=semestre, cursos=cursos, titulacions=titulacions)
     env_db = os.environ.get("HORARIS_DB", "").strip()
     if env_db:
-        return SqliteTimetableSource(Path(env_db)).load(
-            semestre=semestre, cursos=cursos, titulacions=titulacions
-        )
+        return SqliteTimetableSource(Path(env_db)).load(semestre=semestre, cursos=cursos, titulacions=titulacions)
     env_paquet = os.environ.get("HORARIS_PAQUET", "").strip()
     if env_paquet:
-        return CsvTimetableSource(Path(env_paquet)).load(
-            semestre=semestre, cursos=cursos, titulacions=titulacions
-        )
+        return CsvTimetableSource(Path(env_paquet)).load(semestre=semestre, cursos=cursos, titulacions=titulacions)
     raise ValueError("provide --db, --paquet, or set HORARIS_DB / HORARIS_PAQUET")
 
 
@@ -131,11 +123,7 @@ def solve_and_export(
     phase2_budget = max(30, budget - phase1_budget)
 
     cursos_set = cursos if isinstance(cursos, frozenset) else parse_cursos(cursos)
-    tits_set = (
-        titulacions
-        if isinstance(titulacions, frozenset)
-        else parse_titulacions(titulacions)
-    )
+    tits_set = titulacions if isinstance(titulacions, frozenset) else parse_titulacions(titulacions)
     data = _load_data(
         paquet=paquet,
         db=db,

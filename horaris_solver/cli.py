@@ -117,10 +117,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         if args.proposta is not None:
             if not args.proposta.is_file():
-                print(
-                    f"proposta not found: {args.proposta} "
-                    "(solve probably failed before writing the CSV)"
-                )
+                print(f"proposta not found: {args.proposta} (solve probably failed before writing the CSV)")
                 return 2
             assignments = read_proposta_csv(args.proposta)
             room_hits = find_room_overlaps(data, assignments)

@@ -113,9 +113,7 @@ def repair_unplaced_with_cpsat(
             LAST_STATUS = "INFEASIBLE"
             return None
         day_vars[aid] = model.NewIntVar(0, 4, f"d_{aid}")
-        start_vars[aid] = model.NewIntVarFromDomain(
-            cp_model.Domain.FromValues(slots), f"s_{aid}"
-        )
+        start_vars[aid] = model.NewIntVarFromDomain(cp_model.Domain.FromValues(slots), f"s_{aid}")
 
     shared: dict[str, list[str]] = {}
     for session in data.sessions.values():
@@ -147,12 +145,12 @@ def repair_unplaced_with_cpsat(
             model.Add(day_vars[left_id] != day_vars[right_id]).OnlyEnforceIf(same.Not())
             left_before = model.NewBoolVar(f"lb_{left_id}_{right_id}")
             right_before = model.NewBoolVar(f"rb_{left_id}_{right_id}")
-            model.Add(
-                start_vars[left_id] + left.duration_min <= start_vars[right_id]
-            ).OnlyEnforceIf([same, left_before])
-            model.Add(
-                start_vars[right_id] + right.duration_min <= start_vars[left_id]
-            ).OnlyEnforceIf([same, right_before])
+            model.Add(start_vars[left_id] + left.duration_min <= start_vars[right_id]).OnlyEnforceIf(
+                [same, left_before]
+            )
+            model.Add(start_vars[right_id] + right.duration_min <= start_vars[left_id]).OnlyEnforceIf(
+                [same, right_before]
+            )
             model.AddBoolOr([same.Not(), left_before, right_before])
 
     soft: list[cp_model.LinearExprT] = []

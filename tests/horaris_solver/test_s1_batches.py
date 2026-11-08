@@ -146,9 +146,7 @@ def _run(
     return run_s1_batches(
         db=db if db is not None else _touch_db(tmp_path),
         out_dir=out_dir if out_dir is not None else tmp_path / "out",
-        conclusions_path=(
-            conclusions_path if conclusions_path is not None else tmp_path / "conclusions.md"
-        ),
+        conclusions_path=(conclusions_path if conclusions_path is not None else tmp_path / "conclusions.md"),
         strategy=strategy,
         max_time_s=1,
         solve=solve,
@@ -230,10 +228,7 @@ def test_joint_morning_failure_runs_ladder_and_afternoon(tmp_path: Path) -> None
     jobs = [(_as_cursos(call.cursos), _as_tits(call.titulacions)) for call in solve.calls]
     assert jobs[0] == (MORNING, frozenset())
     assert any(cursos == frozenset({"1r"}) for cursos, _tits in jobs[1:])
-    assert any(
-        cursos == frozenset({"2n"}) and tits.isdisjoint(GEET_GEST) and tits
-        for cursos, tits in jobs[1:]
-    )
+    assert any(cursos == frozenset({"2n"}) and tits.isdisjoint(GEET_GEST) and tits for cursos, tits in jobs[1:])
     assert any(cursos == frozenset({"2n"}) and GEET_GEST <= tits for cursos, tits in jobs[1:])
     assert any(cursos == AFTERNOON for cursos, _tits in jobs[1:])
     assert report.used_ladder is True
@@ -249,10 +244,7 @@ def test_geet_gest_failure_writes_conclusions_without_raising(tmp_path: Path) ->
     text = conclusions.read_text(encoding="utf-8")
     lowered = text.lower()
     assert "geet" in lowered and "gest" in lowered
-    assert any(
-        marker in lowered
-        for marker in ("fail", "infeasible", "unknown", "false", "not ok")
-    )
+    assert any(marker in lowered for marker in ("fail", "infeasible", "unknown", "false", "not ok"))
     assert Path(report.conclusions_path).resolve() == conclusions.resolve()
 
 

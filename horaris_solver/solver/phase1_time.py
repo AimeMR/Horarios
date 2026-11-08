@@ -119,9 +119,7 @@ def solve_phase1(
         day_vars[activity.id] = model.NewIntVarFromDomain(
             cp_model.Domain.FromValues(allowed_days), f"day_{activity.id}"
         )
-        start_vars[activity.id] = model.NewIntVarFromDomain(
-            cp_model.Domain.FromValues(slots), f"start_{activity.id}"
-        )
+        start_vars[activity.id] = model.NewIntVarFromDomain(cp_model.Domain.FromValues(slots), f"start_{activity.id}")
 
         # R2-CALENDARI aturades: if day==d, start must not overlap aturada windows
         for day_idx in allowed_days:
@@ -182,9 +180,7 @@ def solve_phase1(
             if same_teaching_event(left, right, data):
                 continue  # linked by id_compartida — equality constraints handle them
             share_teacher = bool(left.teachers & right.teachers)
-            share_cohort = bool(set(left.cohorts) & set(right.cohorts)) and cohort_clash(
-                left, right, data
-            )
+            share_cohort = bool(set(left.cohorts) & set(right.cohorts)) and cohort_clash(left, right, data)
             plab_block = plab_blocks(left, right)
             if not (share_teacher or share_cohort or plab_block):
                 continue
@@ -207,19 +203,11 @@ def solve_phase1(
                 gap = model.NewIntVar(0, MATI[1], f"gap_{left.id}_{right.id}")
                 model.Add(gap == 0).OnlyEnforceIf(same_day.Not())
                 # left then right
-                model.Add(gap >= start_vars[right.id] - left_end).OnlyEnforceIf(
-                    [same_day, left_before]
-                )
-                model.Add(gap <= start_vars[right.id] - left_end).OnlyEnforceIf(
-                    [same_day, left_before]
-                )
+                model.Add(gap >= start_vars[right.id] - left_end).OnlyEnforceIf([same_day, left_before])
+                model.Add(gap <= start_vars[right.id] - left_end).OnlyEnforceIf([same_day, left_before])
                 # right then left
-                model.Add(gap >= start_vars[left.id] - right_end).OnlyEnforceIf(
-                    [same_day, right_before]
-                )
-                model.Add(gap <= start_vars[left.id] - right_end).OnlyEnforceIf(
-                    [same_day, right_before]
-                )
+                model.Add(gap >= start_vars[left.id] - right_end).OnlyEnforceIf([same_day, right_before])
+                model.Add(gap <= start_vars[left.id] - right_end).OnlyEnforceIf([same_day, right_before])
                 soft_terms.append(gap * WEIGHT_HORES_MORTES)
 
     if soft_terms and not stop_after_first_feasible:
@@ -238,9 +226,7 @@ def solve_phase1(
         activity_start = {a.id: solver.Value(start_vars[a.id]) for a in activities}
         use_obj = bool(soft_terms) and not stop_after_first_feasible
         objective = int(solver.ObjectiveValue()) if use_obj else 0
-        return Phase1Result(
-            True, activity_day, activity_start, status_name, "phase1 ok", objective=objective
-        )
+        return Phase1Result(True, activity_day, activity_start, status_name, "phase1 ok", objective=objective)
     if status == cp_model.INFEASIBLE:
         return Phase1Result(False, {}, {}, "INFEASIBLE", "phase1 failed")
     return Phase1Result(
@@ -272,9 +258,7 @@ def expand_phase1_to_assignments(
                 start_min=start,
                 room=(
                     session.room_partida
-                    if session.fixed.startswith("R7")
-                    and day == session.day
-                    and start == session.start_min
+                    if session.fixed.startswith("R7") and day == session.day and start == session.start_min
                     else ""
                 ),
             )
