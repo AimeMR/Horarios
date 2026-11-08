@@ -1,8 +1,6 @@
 # Recuentos esperados · paquet_fals
 
-Filas que deben quedar en cada tabla de `contexto-local/esquema.sql` (sin `grup_cohort`, que la migración 0001
-elimina) tras cargar estas fixtures según el mapeo de `docs/plans/plan-bd-backend.md` (sección "Mapeo CSV → tablas"
-y decisiones de la sección 0). Los usan los tests de carga de la tanda 3.
+Filas que deben quedar en cada tabla de `db/migrations/0001_esquema_inicial.up.sql` (ya sin `grup_cohort`) tras cargar estas fixtures con el extractor (`extractor/load/`). Los usan los tests de carga.
 
 | Tabla | Filas | Cómo sale |
 |---|---:|---|

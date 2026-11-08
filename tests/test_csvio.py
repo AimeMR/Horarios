@@ -2,8 +2,8 @@ import dataclasses
 from pathlib import Path
 
 import pytest
-from extractor.csvio import FilaCsv, llegir_csv
 
+from extractor.csvio import FilaCsv, llegir_csv
 from extractor.errors import CargaError
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "paquet_fals"

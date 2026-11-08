@@ -1,5 +1,7 @@
 import pytest
+
 from extractor.csvio import FilaCsv
+from extractor.errors import CargaError
 from extractor.validacio import (
     ALUMNES_ORIGEN,
     CURSOS,
@@ -12,8 +14,6 @@ from extractor.validacio import (
     Validador,
     sumar_minuts,
 )
-
-from extractor.errors import CargaError
 
 FICHER = "sessions.csv"
 LINIA = 7

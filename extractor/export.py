@@ -1,6 +1,7 @@
 """Exporta una versión de horario guardada en SQLite al CSV de entrega `id_sessio,dia,h_ini,aula[,data]`.
 
-El fichero sale en UTF-8 sin BOM, con LF y salto final, ordenado por `id_sessio`; NULL se escribe como campo vacío.
+El fichero sale en UTF-8 sin BOM, con CRLF (como los CSV oficiales del paquete) y salto final, ordenado por
+`id_sessio`; NULL se escribe como campo vacío.
 """
 
 import csv
@@ -55,7 +56,7 @@ def _escriu_csv(desti: Path, files: list[tuple[str, ...]], amb_data: bool) -> No
     try:
         desti.parent.mkdir(parents=True, exist_ok=True)
         with open(desti, "w", encoding="utf-8", newline="") as fitxer:
-            escriptor = csv.writer(fitxer, lineterminator="\n")
+            escriptor = csv.writer(fitxer, lineterminator="\r\n")
             escriptor.writerow(capcalera)
             escriptor.writerows(fila[:amplada] for fila in files)
     except OSError as exc:

@@ -18,7 +18,7 @@
 -- Los comentarios PENDIENTE ya resueltos (motor, id_grup, cohortes, vigent_des_de, facultat/departament) se han
 -- sustituido por la decisión tomada.
 --
--- Origen de cada tabla (ver docs/04-propuesta-base-de-datos.md):
+-- Origen de cada tabla:
 --   [paquet]     se llena con los CSV/JSON del paquete
 --   [sin datos]  estaba en el boceto del equipo, el paquete no trae datos
 --   [extensión]  característica propia del equipo

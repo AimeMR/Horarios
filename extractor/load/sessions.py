@@ -20,12 +20,12 @@ from typing import Protocol
 from extractor.csvio import FilaCsv, llegir_csv
 from extractor.errors import CargaError
 from extractor.linia import linia, numero, triar_teoria
+from extractor.load.comu import codis, id_grup
 from extractor.validacio import ALUMNES_ORIGEN, CURSOS, DC, DIES, TIPUS_GRUP, TORNS, Validador, sumar_minuts
 
 VIGENT_DES_DE: str = "2026-09-01"
 ALUMNES_ORIGEN_DEFECTE: str = "sigma"
 
-_SEPARADOR_ID_GRUP = "·"
 _TIPUS_TEORIA = "TE"
 _TORN_PER_CURS: dict[str, str] = {"1r": "mati", "2n": "mati", "3r": "tarda", "4t": "tarda", "M": "tarda"}
 _COL_ALUMNES_ORIGEN = "alumnes_origen"
@@ -142,7 +142,7 @@ class _Grup:
 
     @property
     def id_grup(self) -> str:
-        return _id_grup(self.codi, self.grup)
+        return id_grup(self.codi, self.grup)
 
     @property
     def numero(self) -> str:
@@ -245,9 +245,9 @@ def carregar_sessions(
 
 def _llegir_sessions(conn: sqlite3.Connection, paquet: Path, fitxer: str) -> list[_FilaSessio]:
     referencies = _Referencies(
-        aules=_codis(conn, "SELECT codi FROM aula"),
-        plans=_codis(conn, "SELECT pla FROM pla_estudis"),
-        titulacions=_codis(conn, "SELECT codi FROM titulacio"),
+        aules=codis(conn, "SELECT codi FROM aula"),
+        plans=codis(conn, "SELECT pla FROM pla_estudis"),
+        titulacions=codis(conn, "SELECT codi FROM titulacio"),
     )
     lector = _Lector(fitxer, Validador(fitxer))
     return [_fila_sessio(lector, referencies, fila) for fila in llegir_csv(paquet / fitxer, _COLUMNES_SESSIONS)]
@@ -457,13 +457,13 @@ def _teories(grups: Sequence[_Grup]) -> list[FilaSql]:
             continue
         teoria = triar_teoria(grup.linia, teories.get(grup.codi, []), numero_subgrup=grup.numero)
         if teoria is not None:
-            files.append((_id_grup(grup.codi, teoria), grup.id_grup))
+            files.append((id_grup(grup.codi, teoria), grup.id_grup))
     return files
 
 
 def _carregar_activitats(conn: sqlite3.Connection, paquet: Path, fitxer: str) -> None:
     lector = _Lector(fitxer, Validador(fitxer))
-    grups = _codis(conn, "SELECT id_grup FROM grup")
+    grups = codis(conn, "SELECT id_grup FROM grup")
     activitats = [_activitat(lector, grups, fila) for fila in llegir_csv(paquet / fitxer, _COLUMNES_ACTIVITATS)]
     _inserir(
         conn,
@@ -479,8 +479,8 @@ def _carregar_activitats(conn: sqlite3.Connection, paquet: Path, fitxer: str) ->
 
 def _activitat(lector: _Lector, grups: frozenset[str], fila: FilaCsv) -> _Activitat:
     validador = lector.validador
-    id_grup = _id_grup(validador.text(fila, "codi"), validador.text(fila, "grup"))
-    if id_grup not in grups:
+    grup = id_grup(validador.text(fila, "codi"), validador.text(fila, "grup"))
+    if grup not in grups:
         raise lector.error(fila, "grup", "el grupo no existe en las sesiones")
     h_ini = validador.hora(fila, "h_ini")
     h_fi = validador.hora(fila, "h_fi")
@@ -488,7 +488,7 @@ def _activitat(lector: _Lector, grups: frozenset[str], fila: FilaCsv) -> _Activi
         raise lector.error(fila, "h_fi", "no es posterior a h_ini")
     return _Activitat(
         activitat_id=validador.text(fila, "activitat_id"),
-        id_grup=id_grup,
+        id_grup=grup,
         dia=validador.opcio(fila, "dia", DIES),
         h_ini=h_ini,
         h_fi=h_fi,
@@ -501,7 +501,7 @@ def _activitat(lector: _Lector, grups: frozenset[str], fila: FilaCsv) -> _Activi
 def _inserir_sessions(
     conn: sqlite3.Connection, fichero: str, files: Sequence[_FilaSessio], id_escenari: str | None
 ) -> None:
-    activitats = _codis(conn, "SELECT activitat_id FROM activitat")
+    activitats = codis(conn, "SELECT activitat_id FROM activitat")
     for fila in files:
         if fila.sessio.activitat_id is not None and fila.sessio.activitat_id not in activitats:
             raise CargaError(fichero, fila.linia, "activitat_id", "la actividad no existe")
@@ -527,15 +527,6 @@ def _fila_sessio_sql(sessio: _Sessio, id_escenari: str | None) -> FilaSql:
 
 
 # --- Utilidades ----------------------------------------------------------------------------------------------
-
-
-def _id_grup(codi: str, grup: str) -> str:
-    return f"{codi}{_SEPARADOR_ID_GRUP}{grup}"
-
-
-def _codis(conn: sqlite3.Connection, sql: str) -> frozenset[str]:
-    """Primera columna de una consulta fija (sin parámetros) como conjunto de textos."""
-    return frozenset(str(fila[0]) for fila in conn.execute(sql))
 
 
 def _inserir(conn: sqlite3.Connection, fichero: str, taula: str, sql: str, files: Iterable[FilaSql]) -> None:
