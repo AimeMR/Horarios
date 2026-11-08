@@ -81,3 +81,4 @@ export function FlagEn({ width = 20, height = 15, className = '' }) {
     </svg>
   );
 }
+
