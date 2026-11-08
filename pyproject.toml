@@ -20,7 +20,13 @@ module-root = ""
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-extend-exclude = ["repte-horaris-escola"]
+extend-exclude = [
+    "repte-horaris-escola",
+    "backend",
+    "frontend",
+    "chatbot",
+    "__MACOSX",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "PLW1514"]
@@ -43,6 +49,9 @@ exclude = [
     '^\.venv/',
     '^\.agentic/',
     '^\.claude/',
+    '^backend/',
+    '^frontend/',
+    '^chatbot/',
 ]
 
 [tool.pytest.ini_options]
@@ -50,7 +59,7 @@ testpaths = ["tests"]
 addopts = "-q"
 
 [tool.bandit]
-exclude_dirs = ["tests", ".venv", "repte-horaris-escola"]
+exclude_dirs = ["tests", ".venv", "repte-horaris-escola", "backend", "frontend", "chatbot"]
 
 [dependency-groups]
 dev = [

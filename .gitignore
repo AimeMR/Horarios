@@ -47,6 +47,8 @@ out/
 .idea/
 .DS_Store
 Thumbs.db
+__MACOSX/
+._*
 *.suo
 *.ntvs*
 *.njsproj
