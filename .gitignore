@@ -1,3 +1,26 @@
+# ==============================================================================
+# DEPENDENCIAS Y BUILDS
+# ==============================================================================
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+
+# ==============================================================================
+# LOGS
+# ==============================================================================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==============================================================================
+# MATERIAL DEL RETO Y BASE DE DATOS LOCAL
+# ==============================================================================
 # Material del reto: datos pseudonimizados y verificador oficial. No se publican.
 repte-horaris-escola/
 
@@ -9,12 +32,32 @@ repte-horaris-escola/
 # Propuestas e informes exportados (contienen datos del paquete)
 out/
 
-# Entorno local
+# ==============================================================================
+# ENTORNO LOCAL
+# ==============================================================================
 .env
 .env.*
 !.env.example
 
-# Python
+# ==============================================================================
+# EDITORES Y SISTEMA
+# ==============================================================================
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+__MACOSX/
+._*
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==============================================================================
+# PYTHON (Extractor / Scripts)
+# ==============================================================================
 __pycache__/
 .venv/
 .mypy_cache/
@@ -27,3 +70,27 @@ node_modules/
 # Builds
 build/
 dist/
+dist-ssr
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Local Vite leftovers
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
