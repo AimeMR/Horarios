@@ -140,6 +140,25 @@ Endpoints (todos `GET`):
 | `/versions/:id/parrilla` | `setmana` y al menos uno de `aula`, `cohort`, `profe`, `assignatura`, `grup` |
 | `/versions/:id/ocupacio` | `setmana`, `tipus` |
 
+## Frontend (Visor de Planos y Horarios en React)
+
+Aplicación web interactiva en React + Vite (`frontend/`) con visor de mapas SVG por plantas (0 a 3), horarios semanales de aulas estilo Excel, filtros académicos avanzados (titulación, curso, asignatura, grupo), soporte trilingüe (Castellano, Català, English) y chatbot asistente de IA local.
+
+Requisitos: Node >= 18 y npm.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Para compilar en producción:
+
+```bash
+cd frontend
+npm run build
+```
+
 ## Qué se sube y qué no
 
 Los datos del paquete están **pseudonimizados, no anonimizados**: se pueden volver a asociar a personas. Por eso
