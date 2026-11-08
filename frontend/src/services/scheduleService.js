@@ -22,17 +22,28 @@ export const API_BASE_URL =
  * @param {number} versionId - Identificador de la versión (por defecto 1).
  * @returns {Promise<{ data: Object|null, source: string, error?: string }>}
  */
-export async function getRoomSchedule(aula, setmana = '2026-W45', versionId = 1) {
+export async function getRoomSchedule(aula, setmana = '2026-W45', versionId = 2) {
   const targetWeek = typeof setmana === 'string' && setmana.includes('-W') ? setmana : '2026-W45';
-  const url = `${API_BASE_URL}/versions/${versionId}/parrilla?aula=${encodeURIComponent(aula)}&setmana=${encodeURIComponent(targetWeek)}`;
+  let url = `${API_BASE_URL}/versions/${versionId}/parrilla?aula=${encodeURIComponent(aula)}&setmana=${encodeURIComponent(targetWeek)}`;
 
   try {
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       method: 'GET',
       headers: {
         'Accept': 'application/json'
       }
     });
+
+    // Si la versión 2 no existiera, probar versión 1 como alternativa
+    if (response.status === 404 && versionId !== 1) {
+      url = `${API_BASE_URL}/versions/1/parrilla?aula=${encodeURIComponent(aula)}&setmana=${encodeURIComponent(targetWeek)}`;
+      response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -114,7 +125,7 @@ function hashString(str) {
 }
 
 // Horario semanal completo (Lunes a Viernes) para el aula Q4/0003
-function getQ40003WeeklySchedule(versionId = 1) {
+function getQ40003WeeklySchedule(versionId = 1, targetWeek = '2026-W45') {
   const items = [
     // ==========================================
     // LUNES (L)
@@ -483,8 +494,9 @@ function getQ40003WeeklySchedule(versionId = 1) {
 
 // Generador de horario realista para cualquier aula (MOCK LEGACY)
 function generateMockParrillaResponseLegacy(aula, data = '2026-11-07', versionId = 1) {
+  const targetWeek = typeof data === 'string' && data.includes('-W') ? data : '2026-W45';
   if (aula === 'Q4/0003' || aula?.replace(/[\s\-_]/g, '').toUpperCase().includes('Q4/0003')) {
-    return getQ40003WeeklySchedule(versionId);
+    return getQ40003WeeklySchedule(versionId, targetWeek);
   }
 
   const days = ['L', 'M', 'X', 'J', 'V'];
@@ -556,7 +568,7 @@ function generateMockParrillaResponseLegacy(aula, data = '2026-11-07', versionId
 
   return {
     idVersio: versionId,
-    setmana: '2026-W45',
+    setmana: targetWeek,
     dies: [
       { dia: 'L', data: '2026-11-02' },
       { dia: 'M', data: '2026-11-03' },

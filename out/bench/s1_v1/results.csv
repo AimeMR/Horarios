@@ -1,0 +1,3 @@
+strategy,seed,ok,status_summary,wall_s,sessions,R0-FORMAT,R0-HORARI,R1-FIXADA,R1-TORN,R2-FINESTRA,R2-CALENDARI,R3-AULA,R3-AFORAMENT,R3-TIPUS,R3-TANCADA,R4-AULA,R4-DOCENT,R4-ALUMNAT,R4-PLAB,R4-COMPARTIDA,R5-FALTA,R5-SENSE-AULA,R5-RECUPERACIO,R7-PLAB,R8-RESERVA,r5_extra,hores_mortes_min,canvis_franja,canvis_aula,r6_canvis_te_paul_fora_passadis
+hybrid,1,False,phase2 failed: INFEASIBLE,78.75,,,,,,,,,,,,,,,,,,,,,,,,,,
+portfolio,1,False,phase1 failed: INFEASIBLE_DATA,1.56,,,,,,,,,,,,,,,,,,,,,,,,,,

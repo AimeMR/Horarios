@@ -1,0 +1,7 @@
+strategy,seed,ok,status_summary,wall_s,sessions,R0-FORMAT,R0-HORARI,R1-FIXADA,R1-TORN,R2-FINESTRA,R2-CALENDARI,R3-AULA,R3-AFORAMENT,R3-TIPUS,R3-TANCADA,R4-AULA,R4-DOCENT,R4-ALUMNAT,R4-PLAB,R4-COMPARTIDA,R5-FALTA,R5-SENSE-AULA,R5-RECUPERACIO,R7-PLAB,R8-RESERVA,r5_extra,hores_mortes_min,canvis_franja,canvis_aula,r6_canvis_te_paul_fora_passadis
+hybrid,1,True,ok,20.09,2538,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6749,0,0,0,0,0,14520,175,107,311
+hybrid,2,True,ok,20.80,2538,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6749,0,0,0,0,0,14520,175,107,314
+hybrid,3,True,ok,19.34,2538,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6749,0,0,0,0,0,14520,175,107,319
+portfolio,1,False,phase1 failed: INFEASIBLE_DATA,0.38,,,,,,,,,,,,,,,,,,,,,,,,,,
+portfolio,2,False,phase1 failed: INFEASIBLE_DATA,0.42,,,,,,,,,,,,,,,,,,,,,,,,,,
+portfolio,3,False,phase1 failed: INFEASIBLE_DATA,0.34,,,,,,,,,,,,,,,,,,,,,,,,,,
