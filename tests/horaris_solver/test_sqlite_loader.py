@@ -157,3 +157,41 @@ def test_sqlite_loader_reads_session(tmp_path: Path) -> None:
     assert data.sessions["S00001"].cohorts == ("GED:1r",)
     assert "Q1/1011" in data.rooms
     assert "A1" in data.activities
+
+
+def _add_online_activity(path: Path) -> None:
+    """Add a second TE group whose activity is the online activity A0826."""
+    conn = sqlite3.connect(path)
+    conn.executescript(
+        """
+        INSERT INTO grup VALUES (
+            'COD1·TE/12', 'COD1', 'TE/12', 'TE', '12', '12', NULL,
+            30, 'sigma', 40, 0, NULL, 'mati'
+        );
+        INSERT INTO activitat VALUES (
+            'A0826', 'COD1·TE/12', 'M', '08:30', '10:30', '2026-W38', '2026-W38', 1
+        );
+        INSERT INTO sessio (
+            id_sessio, activitat_id, id_grup, setmana, durada_min,
+            data_partida, dia_partida, h_ini_partida, aula_partida
+        ) VALUES (
+            'S00002', 'A0826', 'COD1·TE/12', '2026-W38', 120,
+            '2026-09-15', 'M', '08:30', 'Q1/1011'
+        );
+        """
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_sqlite_loader_marks_online_activity_roomless(tmp_path: Path) -> None:
+    db = tmp_path / "mini.db"
+    _create_mini_db(db)
+    _add_online_activity(db)
+    data = SqliteTimetableSource(db).load(semestre=1)
+    online = data.sessions["S00002"]
+    assert online.online is True and online.sense_espai is True
+    assert data.activities["A0826"].sense_espai is True
+    regular = data.sessions["S00001"]
+    assert regular.online is False and regular.sense_espai is False
+    assert data.activities["A1"].sense_espai is False

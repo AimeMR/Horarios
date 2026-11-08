@@ -9,6 +9,8 @@ DIES = ("L", "M", "X", "J", "V")
 MATI = (8 * 60 + 30, 14 * 60 + 30)  # 08:30–14:30
 TARDA = (14 * 60 + 30, 21 * 60)  # 14:30–21:00, as in the verifier (R1-TORN: start < 14:30 is morning)
 TIPUS_ORDINARIA = "Aules docents"
+ONLINE_ACTIVITIES = frozenset({"A0826"})  # taught online: no room, "ONLINE" in the proposal CSV
+ONLINE_ROOM = "ONLINE"
 
 
 def hm(value: str) -> int:
@@ -56,6 +58,7 @@ class Session:
     teachers: frozenset[str]
     shared_id: str = ""
     sense_espai: bool = False
+    online: bool = False
 
     @property
     def end_min(self) -> int:

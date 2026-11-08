@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from horaris_solver.domain.models import Assignment, TimetableData, fmt
+from horaris_solver.domain.models import ONLINE_ROOM, Assignment, TimetableData, fmt
 
 
 def build_rich_payload(
@@ -31,7 +31,8 @@ def build_rich_payload(
                 "dia": assignment.day if assignment else session.day,
                 "h_ini": fmt(assignment.start_min if assignment else session.start_min),
                 "durada_min": session.duration_min,
-                "aula": assignment.room if assignment else "",
+                "aula": ONLINE_ROOM if session.online else (assignment.room if assignment else ""),
+                "online": session.online,
                 "aula_partida": session.room_partida,
                 "alumnes": session.students,
                 "torn": session.turn,

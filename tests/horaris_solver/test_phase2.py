@@ -9,6 +9,8 @@ from horaris_solver.domain.models import Assignment, Room, Session, TimetableDat
 from horaris_solver.solver import phase2_rooms
 from horaris_solver.solver.phase1_time import expand_phase1_to_assignments, solve_phase1
 from horaris_solver.solver.phase2_rooms import Phase2Result, solve_phase2
+from horaris_solver.solver.room_rules import room_candidates, unit_students
+from horaris_solver.solver.rules import activity_pools
 
 FIXTURE = Path(__file__).parent / "fixtures" / "mini_paquet"
 
@@ -453,3 +455,45 @@ def test_phase2_partial_leaves_session_without_any_valid_room_unassigned() -> No
     assert result.ok
     assert result.unassigned == ("Q",)
     assert _rooms(result) == {"T": "S/1", "Q": ""}
+
+
+def _online_paquet(tmp_path: Path) -> Path:
+    """Mini paquet with activity A1 renamed to the online activity A0826."""
+    paquet = tmp_path / "paquet"
+    paquet.mkdir()
+    for source in FIXTURE.iterdir():
+        text = source.read_text(encoding="utf-8")
+        if source.name == "sessions.csv":
+            text = text.replace(",A1,", ",A0826,")
+        (paquet / source.name).write_text(text, encoding="utf-8")
+    return paquet
+
+
+def test_online_sessions_are_roomless_for_rules_and_pools(tmp_path: Path) -> None:
+    data = CsvTimetableSource(_online_paquet(tmp_path)).load()
+    assert activity_pools(data, data.activities["A0826"]) == frozenset()
+    for sid in data.activities["A0826"].session_ids:
+        assert room_candidates(data, data.sessions[sid]) == [""]
+        assert sid not in unit_students(data)
+
+
+def test_phase2_online_sessions_get_no_room(tmp_path: Path) -> None:
+    data = CsvTimetableSource(_online_paquet(tmp_path)).load()
+    timed = [Assignment(s.id, s.day, s.start_min, "") for s in data.sessions.values()]
+    result = solve_phase2(data, timed, max_time_s=10)
+    assert result.ok
+    rooms = _rooms(result)
+    assert rooms["S00001"] == "" and rooms["S00002"] == ""
+    assert "S00001" not in result.unassigned and "S00002" not in result.unassigned
+    others = [s for s in data.sessions.values() if not s.online and not s.sense_espai]
+    assert others and all(rooms[s.id] for s in others)
+
+
+def test_phase2_online_session_does_not_block_the_only_room() -> None:
+    online = replace(_session("O", "TE", start=600, partida="A/1001", cohort="C1", group="1", sense=True), online=True)
+    regular = _session("R", "TE", start=600, partida="A/1001", cohort="C2", group="2")
+    rooms = {"A/1001": SEMINAR_ROOMS["A/1001"]}
+    data = TimetableData(sessions={"O": online, "R": regular}, rooms=rooms, activities={})
+    result = solve_phase2(data, _timed([online, regular]), max_time_s=10)
+    assert result.ok and not result.unassigned
+    assert _rooms(result) == {"O": "", "R": "A/1001"}

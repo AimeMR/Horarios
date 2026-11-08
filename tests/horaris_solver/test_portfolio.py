@@ -143,6 +143,30 @@ def test_blocking_precheck_short_circuits(data: TimetableData, monkeypatch: pyte
     assert "EMPTY_DOMAIN=2" in out.best.message
     assert (out.ranked, out.candidates, out.n_effective, out.stages) == ((), (), 0, ("precheck:blocking",))
     assert h.greedy_calls == [] and h.cpsat_calls == []
+    assert out.blocking_codes == ("EMPTY_DOMAIN",)
+
+
+def test_blocking_codes_are_sorted_unique_and_skip_warnings(
+    data: TimetableData, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    h = Harness(greedy=[greedy_result(1)])
+    h.install(monkeypatch)
+    issues = (
+        PrecheckIssue("SINGLE_DAY_OVERLOAD", ("A1",), "x", True),
+        PrecheckIssue("SIBLINGS_EXCEED_DAYS", ("A2",), "x", True),
+        PrecheckIssue("SINGLE_DAY_OVERLOAD", ("A3",), "x", True),
+        PrecheckIssue("PINNED_CLASH", ("A4",), "inherited", False),
+    )
+    monkeypatch.setattr(portfolio, "run_precheck", lambda _d, _r=None: PrecheckReport(issues))
+    out = run_portfolio(data, config=PortfolioConfig(size=1, top_k=1), budget=BUDGET, clock=h.clock)
+    assert out.best.status == "INFEASIBLE_DATA"
+    assert out.blocking_codes == ("SIBLINGS_EXCEED_DAYS", "SINGLE_DAY_OVERLOAD")
+
+
+def test_blocking_codes_empty_when_precheck_passes(data: TimetableData, monkeypatch: pytest.MonkeyPatch) -> None:
+    h = Harness(greedy=[greedy_result(1)], cpsat=[cpsat_ok(0)])
+    out = run(h, data, monkeypatch, size=1, top_k=1)
+    assert out.blocking_codes == ()
 
 
 def test_seeds_candidate_zero_deterministic(data: TimetableData, monkeypatch: pytest.MonkeyPatch) -> None:

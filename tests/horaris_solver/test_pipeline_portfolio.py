@@ -159,8 +159,15 @@ _D7_OFF = Phase1Rules(same_kind_day=False, room_pools=True)
 class _Ladder:
     """Fake greedy + CP-SAT per ladder step; ``ok_steps`` maps a step name to "cpsat" or "greedy" success."""
 
-    def __init__(self, data: TimetableData, ok_steps: dict[str, str], clock: list[float] | None = None) -> None:
+    def __init__(
+        self,
+        data: TimetableData,
+        ok_steps: dict[str, str],
+        clock: list[float] | None = None,
+        steps: tuple[str, ...] = ("RELAXED_D7", "RELAXED_D6_D7", "RELAXED_R4"),
+    ) -> None:
         self.data = data
+        self.steps = steps
         self.ok_steps = ok_steps
         self.clock = clock
         self.greedy_calls: list[dict[str, Any]] = []
@@ -168,12 +175,12 @@ class _Ladder:
         self.remaining_at_call: list[float] = []
 
     def greedy(self, _data: object, **kwargs: Any) -> Phase1Result:
-        step = _STEPS[len(self.greedy_calls)]
+        step = self.steps[len(self.greedy_calls)]
         self.greedy_calls.append(kwargs)
         return _partida_map(self.data, status="GREEDY", ok=self.ok_steps.get(step) == "greedy")
 
     def cpsat(self, _data: object, **kwargs: Any) -> Phase1Result:
-        step = _STEPS[len(self.cpsat_calls)]
+        step = self.steps[len(self.cpsat_calls)]
         self.cpsat_calls.append(kwargs)
         if self.clock is not None:
             self.remaining_at_call.append(100.0 - self.clock[0])
@@ -491,3 +498,132 @@ def test_portfolio_exports_best_partial_when_none_complete(
     text = json_out.read_text(encoding="utf-8")
     assert json.loads(text)["metrics"]["unassigned_rooms"] == 1
     assert "HIDDEN-ID" not in text
+
+
+def _blocked(codes: tuple[str, ...]) -> PortfolioResult:
+    best = Phase1Result(False, {}, {}, "INFEASIBLE_DATA", "precheck blocking: x")
+    return PortfolioResult(
+        best=best, ranked=(), candidates=(), n_effective=0, stages=("precheck:blocking",), blocking_codes=codes
+    )
+
+
+def test_precheck_single_day_overload_runs_r4_and_exports(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, data: TimetableData
+) -> None:
+    ladder = _Ladder(data, {"RELAXED_R4": "cpsat"}, steps=("RELAXED_R4",))
+    phase2 = _Phase2Script([_ok_phase2()])
+    _install(monkeypatch, data, _blocked(("SINGLE_DAY_OVERLOAD",)), phase2)
+    _install_ladder(monkeypatch, ladder)
+    out = tmp_path / "o.csv"
+
+    result = pipeline.solve_and_export(out_csv=out, max_time_s=20, strategy="portfolio")
+
+    assert result.ok, result.summary
+    assert out.is_file()
+    assert "phase1=RELAXED_R4" in result.summary
+    assert len(ladder.cpsat_calls) == 1
+    assert ladder.cpsat_calls[0]["rules"] is None and ladder.cpsat_calls[0]["soft_overlap"] is True
+    assert "relax: from precheck SINGLE_DAY_OVERLOAD" in result.stage_reports
+    assert [r for r in result.stage_reports if r.startswith("relax:RELAXED")] == ["relax:RELAXED_R4 OPTIMAL"]
+    assert len(phase2.calls) == 1
+
+
+def test_precheck_siblings_only_starts_ladder_at_d7(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, data: TimetableData
+) -> None:
+    ladder = _Ladder(data, {"RELAXED_D7": "cpsat"})
+    _install(monkeypatch, data, _blocked(("SIBLINGS_EXCEED_DAYS",)), _Phase2Script([_ok_phase2()]))
+    _install_ladder(monkeypatch, ladder)
+
+    result = pipeline.solve_and_export(out_csv=tmp_path / "o.csv", max_time_s=20, strategy="portfolio")
+
+    assert result.ok, result.summary
+    assert "phase1=RELAXED_D7" in result.summary
+    assert ladder.cpsat_calls[0]["rules"] == _D7_OFF
+    assert "relax: from precheck SIBLINGS_EXCEED_DAYS" in result.stage_reports
+
+
+def test_precheck_both_relaxable_codes_start_at_r4(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, data: TimetableData
+) -> None:
+    ladder = _Ladder(data, {"RELAXED_R4": "cpsat"}, steps=("RELAXED_R4",))
+    codes = ("SIBLINGS_EXCEED_DAYS", "SINGLE_DAY_OVERLOAD")
+    _install(monkeypatch, data, _blocked(codes), _Phase2Script([_ok_phase2()]))
+    _install_ladder(monkeypatch, ladder)
+
+    result = pipeline.solve_and_export(out_csv=tmp_path / "o.csv", max_time_s=20, strategy="portfolio")
+
+    assert result.ok, result.summary
+    assert len(ladder.cpsat_calls) == 1 and ladder.cpsat_calls[0]["soft_overlap"] is True
+    assert "relax: from precheck SIBLINGS_EXCEED_DAYS, SINGLE_DAY_OVERLOAD" in result.stage_reports
+
+
+def test_precheck_relax_failure_reports_and_writes_nothing(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, data: TimetableData
+) -> None:
+    ladder = _Ladder(data, {}, steps=("RELAXED_R4",))
+    _install(monkeypatch, data, _blocked(("SINGLE_DAY_OVERLOAD",)), _Phase2Script([]))
+    _install_ladder(monkeypatch, ladder)
+    out = tmp_path / "o.csv"
+
+    result = pipeline.solve_and_export(out_csv=out, max_time_s=20, strategy="portfolio")
+
+    assert not result.ok
+    assert "INFEASIBLE_DATA" in result.summary and "relax: RELAXED_R4=INFEASIBLE" in result.summary
+    assert not out.exists()
+
+
+@pytest.mark.parametrize(
+    "codes",
+    [
+        ("EMPTY_DOMAIN",),
+        ("EMPTY_DOMAIN", "SINGLE_DAY_OVERLOAD"),
+        ("HETEROGENEOUS_ACTIVITY",),
+        ("SHARED_NO_COMMON_SLOT", "SIBLINGS_EXCEED_DAYS"),
+        (),
+    ],
+)
+def test_precheck_other_blocking_codes_still_abort(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, data: TimetableData, codes: tuple[str, ...]
+) -> None:
+    ladder = _Ladder(data, {"RELAXED_R4": "cpsat"})
+    phase2 = _Phase2Script([_ok_phase2()])
+    _install(monkeypatch, data, _blocked(codes), phase2)
+    _install_ladder(monkeypatch, ladder)
+    out = tmp_path / "o.csv"
+
+    result = pipeline.solve_and_export(out_csv=out, max_time_s=20, strategy="portfolio")
+
+    assert not result.ok
+    assert "INFEASIBLE_DATA" in result.summary
+    assert ladder.cpsat_calls == [] and ladder.greedy_calls == [] and phase2.calls == []
+    assert not any(r.startswith("relax") for r in result.stage_reports)
+    assert not out.exists()
+
+
+def test_portfolio_writes_online_sessions_as_online(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    paquet = tmp_path / "paquet"
+    paquet.mkdir()
+    for source in FIXTURE.iterdir():
+        text = source.read_text(encoding="utf-8")
+        if source.name == "sessions.csv":
+            text = text.replace(",A1,", ",A0826,")
+        (paquet / source.name).write_text(text, encoding="utf-8")
+    online = CsvTimetableSource(paquet).load()
+    best = _partida_map(online)
+    assignments = [
+        Assignment(s.id, s.day, s.start_min, "" if s.online else "Q1/1011") for s in online.sessions.values()
+    ]
+    _install(
+        monkeypatch,
+        online,
+        _portfolio_result(best, (best,)),
+        _Phase2Script([Phase2Result(True, assignments, "OPTIMAL", "ok")]),
+    )
+    out = tmp_path / "o.csv"
+
+    pipeline.solve_and_export(out_csv=out, max_time_s=20, strategy="portfolio")
+
+    rows = dict(line.split(",", 1) for line in out.read_text(encoding="utf-8").splitlines()[1:])
+    assert rows["S00001"].endswith(",ONLINE") and rows["S00002"].endswith(",ONLINE")
+    assert rows["S00003"].endswith(",Q1/1011")

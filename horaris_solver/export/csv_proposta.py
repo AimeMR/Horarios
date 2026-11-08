@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from horaris_solver.domain.models import Assignment, fmt, hm
+from horaris_solver.domain.models import ONLINE_ROOM, Assignment, fmt, hm
 
 
 def read_proposta_csv(path: Path) -> list[Assignment]:
@@ -15,7 +15,9 @@ def read_proposta_csv(path: Path) -> list[Assignment]:
         if reader.fieldnames is None or not required.issubset(set(reader.fieldnames)):
             raise ValueError(f"proposta CSV must have columns {sorted(required)}")
         out: list[Assignment] = []
-        for row in reader:
+        for line, row in enumerate(reader, start=2):
+            if any(row.get(column) is None for column in ("id_sessio", "dia", "h_ini")):
+                raise ValueError(f"proposta CSV line {line} is missing columns")
             out.append(
                 Assignment(
                     session_id=row["id_sessio"].strip(),
@@ -31,7 +33,10 @@ def write_proposta_csv(
     path: Path,
     assignments: list[Assignment],
     order: tuple[str, ...] | None = None,
+    *,
+    online_ids: frozenset[str] = frozenset(),
 ) -> None:
+    """Write the proposal; sessions in ``online_ids`` get ``ONLINE`` as room instead of their assignment."""
     by_id = {a.session_id: a for a in assignments}
     if order:
         ordered = [by_id[sid] for sid in order if sid in by_id]
@@ -50,6 +55,6 @@ def write_proposta_csv(
                     "id_sessio": assignment.session_id,
                     "dia": assignment.day,
                     "h_ini": fmt(assignment.start_min),
-                    "aula": assignment.room,
+                    "aula": ONLINE_ROOM if assignment.session_id in online_ids else assignment.room,
                 }
             )

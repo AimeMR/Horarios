@@ -176,6 +176,20 @@ RELAX_LADDER: tuple[_RelaxStep, ...] = (
     _RelaxStep("RELAXED_R4", None, True, True),
 )
 RELAX_REPAIR_MAX_S = 45.0
+# Blocking precheck codes the ladder can absorb, mapped to the first rung that relaxes them.
+PRECHECK_RELAX_START: dict[str, str] = {
+    "SIBLINGS_EXCEED_DAYS": "RELAXED_D7",
+    "SINGLE_DAY_OVERLOAD": "RELAXED_R4",
+}
+
+
+def _precheck_relax_steps(codes: tuple[str, ...]) -> tuple[_RelaxStep, ...]:
+    """Ladder rungs to try when the precheck blocked only on relaxable codes; empty means abort."""
+    if not codes or not set(codes) <= PRECHECK_RELAX_START.keys():
+        return ()
+    names = [step.name for step in RELAX_LADDER]
+    start = max(names.index(PRECHECK_RELAX_START[code]) for code in codes)
+    return RELAX_LADDER[start:]
 
 
 def _run_relax_step(
@@ -208,13 +222,14 @@ def _relax_ladder(
     reserve_s: float,
     config: PortfolioConfig,
     stages: list[str],
+    steps: tuple[_RelaxStep, ...] = RELAX_LADDER,
 ) -> tuple[Phase1Result | None, _RelaxStep | None, list[str]]:
-    """Run the ladder in order, sharing the time left (minus the phase-2 reserve); first accepted rung wins."""
+    """Run the rungs in order, sharing the time left (minus the phase-2 reserve); first accepted rung wins."""
     outcomes: list[str] = []
-    for index, step in enumerate(RELAX_LADDER):
-        slice_s = deadline.cap((deadline.remaining() - reserve_s) / (len(RELAX_LADDER) - index))
+    for index, step in enumerate(steps):
+        slice_s = deadline.cap((deadline.remaining() - reserve_s) / (len(steps) - index))
         if slice_s < MIN_STAGE_S:
-            for skipped in RELAX_LADDER[index:]:
+            for skipped in steps[index:]:
                 stages.append(f"relax:{skipped.name} SKIPPED")
                 outcomes.append(f"{skipped.name}=SKIPPED")
             break
@@ -279,15 +294,19 @@ def _solve_portfolio(data: TimetableData, *, budget: int, config: PortfolioConfi
     res = run_portfolio(data, config=config, budget=split, rules=rules)
     stages = [f"portfolio: {stage}" for stage in res.stages]
     failure = f"phase1 failed: {res.best.status} {res.best.message}"
+    steps = RELAX_LADDER
     if res.best.status == "INFEASIBLE_DATA":
-        return _Solved(res.best, None, tuple(stages), failure=failure)
+        steps = _precheck_relax_steps(res.blocking_codes)
+        if not steps:
+            return _Solved(res.best, None, tuple(stages), failure=failure)
+        stages.append(f"relax: from precheck {', '.join(res.blocking_codes)}")
     relax_counts: dict[str, int] = {}
     if res.best.ok:
         candidates = list(res.ranked)
     else:
         reserve_s = max(MIN_STAGE_S, split.phase2_s)
         relaxed, step, outcomes = _relax_ladder(
-            data, deadline=deadline, reserve_s=reserve_s, config=config, stages=stages
+            data, deadline=deadline, reserve_s=reserve_s, config=config, stages=stages, steps=steps
         )
         if relaxed is None or step is None:
             return _Solved(res.best, None, tuple(stages), failure=f"{failure}; relax: {', '.join(outcomes)}")
@@ -384,7 +403,8 @@ def solve_and_export(
     complete = not phase2.unassigned
     json_status = "ok" if clean and complete else ("diagnostic" if complete else "partial")
 
-    write_proposta_csv(out_csv, phase2.assignments, order=data.order)
+    online_ids = frozenset(s.id for s in data.sessions.values() if s.online)
+    write_proposta_csv(out_csv, phase2.assignments, order=data.order, online_ids=online_ids)
     deficit_rows: tuple[DeficitRow, ...] | None = None
     if deficit_out is not None:
         deficit_rows = compute_deficit(data, phase2.assignments)

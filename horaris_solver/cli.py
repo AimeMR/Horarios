@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -131,8 +132,48 @@ def build_parser() -> argparse.ArgumentParser:
     )
     audit.add_argument("--limit", type=int, default=30, help="Max overlap lines to print")
 
+    merge = sub.add_parser(
+        "merge",
+        help="Join proposal CSVs (e.g. semester 1 and 2) into one, sorted by id_sessio",
+    )
+    merge.add_argument("--out", type=Path, required=True, help="Output proposal CSV path")
+    merge.add_argument("inputs", type=Path, nargs="+", metavar="INPUT", help="Proposal CSVs to join")
+
     sub.add_parser("version", help="Print package version")
     return parser
+
+
+def _merge(inputs: list[Path], out: Path) -> int:
+    """Join proposal CSVs keeping each row verbatim (rooms such as ONLINE included); 2 on any bad input."""
+    from collections import Counter
+
+    from horaris_solver.domain.models import Assignment
+    from horaris_solver.export.csv_proposta import read_proposta_csv, write_proposta_csv
+
+    rows: list[Assignment] = []
+    for path in inputs:
+        if not path.is_file():
+            print(f"merge: input not found: {path}", file=sys.stderr)
+            return 2
+        try:
+            loaded = read_proposta_csv(path)
+        except (OSError, ValueError) as exc:
+            print(f"merge: invalid proposal CSV {path}: {exc}", file=sys.stderr)
+            return 2
+        print(f"{path}: rows={len(loaded)}")
+        rows.extend(loaded)
+    counts = Counter(row.session_id for row in rows)
+    repeated = sum(1 for n in counts.values() if n > 1)
+    if repeated:
+        print(f"merge: {repeated} id_sessio repeated across inputs; nothing written", file=sys.stderr)
+        return 2
+    try:
+        write_proposta_csv(out, rows)
+    except OSError as exc:
+        print(f"merge: cannot write {out}: {exc}", file=sys.stderr)
+        return 2
+    print(f"total rows={len(rows)} out={out}")
+    return 0
 
 
 def _portfolio_config(parser: argparse.ArgumentParser, args: argparse.Namespace) -> PortfolioConfig | None:
@@ -165,6 +206,9 @@ def main(argv: list[str] | None = None) -> int:
 
         print(__version__)
         return 0
+
+    if args.command == "merge":
+        return _merge(args.inputs, args.out)
 
     if args.command == "solve":
         from horaris_solver.solver.pipeline import solve_and_export

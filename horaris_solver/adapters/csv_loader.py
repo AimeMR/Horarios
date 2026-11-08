@@ -8,6 +8,7 @@ from pathlib import Path
 
 from horaris_solver.domain.filters import resolve_turn, session_matches_filters
 from horaris_solver.domain.models import (
+    ONLINE_ACTIVITIES,
     Activity,
     CalendarBlock,
     Room,
@@ -80,9 +81,11 @@ class CsvTimetableSource:
                 continue
             explicit_turn = (row.get("torn_requerit") or "desconegut").strip()
             sid = row["id_sessio"]
+            activity_id = row.get("activitat_id") or ""
+            online = activity_id in ONLINE_ACTIVITIES
             sessions[sid] = Session(
                 id=sid,
-                activity_id=row.get("activitat_id") or "",
+                activity_id=activity_id,
                 code=row["codi"],
                 kind=row["tipus"],
                 group=row["grup"],
@@ -97,7 +100,8 @@ class CsvTimetableSource:
                 fixed=(row.get("fixada") or "").strip(),
                 teachers=_parse_teachers(row.get("docents") or ""),
                 shared_id=(row.get("id_compartida") or "").strip(),
-                sense_espai=(row.get("sense_espai") or "").strip() == "1",
+                sense_espai=online or (row.get("sense_espai") or "").strip() == "1",
+                online=online,
             )
             order.append(sid)
 

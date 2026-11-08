@@ -8,6 +8,7 @@ from pathlib import Path
 
 from horaris_solver.domain.filters import resolve_turn, session_matches_filters
 from horaris_solver.domain.models import (
+    ONLINE_ACTIVITIES,
     Activity,
     CalendarBlock,
     Room,
@@ -141,9 +142,11 @@ class SqliteTimetableSource:
                 continue
             explicit_turn = (row["torn_requerit"] or "desconegut").strip()
             sid = row["id_sessio"]
+            activity_id = (row["activitat_id"] or "").strip()
+            online = activity_id in ONLINE_ACTIVITIES
             sessions[sid] = Session(
                 id=sid,
-                activity_id=(row["activitat_id"] or "").strip(),
+                activity_id=activity_id,
                 code=row["codi"],
                 kind=row["tipus"],
                 group=row["grup"],
@@ -158,7 +161,8 @@ class SqliteTimetableSource:
                 fixed=(row["fixada"] or "").strip(),
                 teachers=_parse_teachers(row["docents"]),
                 shared_id=(row["id_compartida"] or "").strip(),
-                sense_espai=int(row["sense_espai"] or 0) == 1,
+                sense_espai=online or int(row["sense_espai"] or 0) == 1,
+                online=online,
             )
             order.append(sid)
         return sessions, order

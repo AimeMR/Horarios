@@ -66,6 +66,7 @@ class PortfolioResult:
     candidates: tuple[Candidate, ...]
     n_effective: int
     stages: tuple[str, ...]
+    blocking_codes: tuple[str, ...] = ()  # sorted precheck codes when the precheck blocked
 
 
 @dataclass(frozen=True)
@@ -317,7 +318,10 @@ def run_portfolio(
     precheck = run_precheck(data, rules)
     if precheck.blocking:
         best = Phase1Result(False, {}, {}, "INFEASIBLE_DATA", f"precheck blocking: {_precheck_summary(precheck)}")
-        return PortfolioResult(best=best, ranked=(), candidates=(), n_effective=0, stages=("precheck:blocking",))
+        codes = tuple(sorted({issue.code for issue in precheck.issues if issue.blocking}))
+        return PortfolioResult(
+            best=best, ranked=(), candidates=(), n_effective=0, stages=("precheck:blocking",), blocking_codes=codes
+        )
 
     stages: list[str] = ["precheck:ok"]
     candidates = _run_pool(data, config, budget, rules, log_path, clock, window, stages)
