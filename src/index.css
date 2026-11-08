@@ -17,11 +17,16 @@
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  --space-2: 0.5rem;    /* 8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
+  --space-2: 0.5rem;
+  /* 8px */
+  --space-3: 0.75rem;
+  /* 12px */
+  --space-4: 1rem;
+  /* 16px */
+  --space-5: 1.25rem;
+  /* 20px */
+  --space-6: 1.5rem;
+  /* 24px */
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -34,7 +39,9 @@
   --transition-smooth: 0.24s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -208,7 +215,8 @@ body {
    ========================================================================== */
 .workspace-layout {
   display: flex;
-  margin-top: 60px; /* Compensa la altura del header fijo */
+  margin-top: 60px;
+  /* Compensa la altura del header fijo */
   height: calc(100vh - 60px);
   width: 100vw;
   position: relative;
@@ -391,8 +399,15 @@ body {
 }
 
 @keyframes dropdownSlideDown {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .filter-subgroup {
@@ -725,10 +740,13 @@ body {
 }
 
 @keyframes alertPulseOther {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 1px 3px rgba(245, 158, 11, 0.25);
   }
+
   50% {
     transform: scale(1.06);
     box-shadow: 0 3px 8px rgba(245, 158, 11, 0.45);
@@ -800,7 +818,8 @@ body {
   flex-direction: column;
   gap: var(--space-2);
   align-items: center;
-  min-height: 0; /* Permite flex encogerse correctamente */
+  min-height: 0;
+  /* Permite flex encogerse correctamente */
 }
 
 .map-frame {
@@ -812,9 +831,11 @@ body {
   padding: var(--space-3);
   box-shadow: var(--shadow-card);
   position: relative;
-  overflow: hidden; /* Confinamiento total del zoom y desplazamiento */
+  overflow: hidden;
+  /* Confinamiento total del zoom y desplazamiento */
   user-select: none;
-  touch-action: none; /* Deshabilita gestos nativos del navegador */
+  touch-action: none;
+  /* Deshabilita gestos nativos del navegador */
   cursor: grab;
 }
 
@@ -894,7 +915,8 @@ body {
 .map-zoom-toolbar {
   position: absolute;
   bottom: 16px;
-  right: 88px; /* Deja espacio para el botón del chatbot en la esquina inferior derecha */
+  right: 88px;
+  /* Deja espacio para el botón del chatbot en la esquina inferior derecha */
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(8px);
   border: 1px solid var(--color-border);
@@ -987,24 +1009,55 @@ body {
   border: 1px solid #475569;
 }
 
-.legend-box.classroom { background-color: #ffffff; }
-.legend-box.lab { background-color: #ffffff; border-color: #0284c7; }
-.legend-box.services { background-color: #f8fafc; }
-.legend-box.stairs { background-color: #e2e8f0; }
+.legend-box.classroom {
+  background-color: #ffffff;
+}
+
+.legend-box.lab {
+  background-color: #ffffff;
+  border-color: #0284c7;
+}
+
+.legend-box.services {
+  background-color: #f8fafc;
+}
+
+.legend-box.stairs {
+  background-color: #e2e8f0;
+}
 
 @keyframes fadeInBanner {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInBackdrop {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes zoomInModal {
-  from { opacity: 0; transform: scale(0.96) translateY(8px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* ==========================================================================
@@ -1477,10 +1530,13 @@ body {
 }
 
 @keyframes onlinePulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3);
   }
+
   50% {
     transform: scale(1.15);
     box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.25);
@@ -1512,6 +1568,7 @@ body {
     opacity: 0;
     transform: translateY(18px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1679,6 +1736,7 @@ body {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1972,10 +2030,14 @@ body {
 }
 
 @keyframes typingBounce {
-  0%, 80%, 100% {
+
+  0%,
+  80%,
+  100% {
     transform: translateY(0);
     opacity: 0.5;
   }
+
   40% {
     transform: translateY(-5px);
     opacity: 1;
@@ -2195,5 +2257,3 @@ body {
     right: 18px;
   }
 }
-
-

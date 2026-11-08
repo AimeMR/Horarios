@@ -250,3 +250,4 @@ export function generateSimulatedResponse(prompt, lang = 'es') {
 
   return dict.default(prompt);
 }
+
