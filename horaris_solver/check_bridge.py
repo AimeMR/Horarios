@@ -20,6 +20,7 @@ def run_official_check(
     challenge_root: Path | None = None,
     paquet: Path | None = None,
     only_rooms: bool = False,
+    timeout_s: float = 900.0,
 ) -> tuple[int, str]:
     root = challenge_root or default_challenge_root()
     if not root.is_dir():
@@ -37,13 +38,17 @@ def run_official_check(
     existing = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = str(root) if not existing else f"{root}{os.pathsep}{existing}"
 
-    completed = subprocess.run(  # noqa: S603  # nosec B603 — argv list only, no shell
-        cmd,
-        cwd=str(root),
-        env=env,
-        check=False,
-        capture_output=True,
-        text=True,
-    )
+    try:
+        completed = subprocess.run(  # noqa: S603  # nosec B603 — argv list only, no shell
+            cmd,
+            cwd=str(root),
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
+        )
+    except subprocess.TimeoutExpired:
+        return 124, f"verifier timeout after {timeout_s:g}s"
     output = (completed.stdout or "") + (completed.stderr or "")
     return completed.returncode, output

@@ -1,12 +1,14 @@
+from dataclasses import replace
 from datetime import date
 from typing import NamedTuple
 
 import pytest
 from ortools.sat.python import cp_model
 
-from horaris_solver.domain.models import Activity, Session, TimetableData
+from horaris_solver.domain.models import Activity, CalendarBlock, Session, TimetableData
 from horaris_solver.solver import local_cpsat_repair as repair_mod
-from horaris_solver.solver.local_cpsat_repair import repair_unplaced_with_cpsat
+from horaris_solver.solver.local_cpsat_repair import blocking_neighborhood, repair_unplaced_with_cpsat
+from horaris_solver.solver.slots import slots_for_duration
 
 _MONDAY = date(2026, 9, 14)
 _TEACHER = frozenset({"T_REPAIR"})
@@ -219,3 +221,203 @@ def test_repair_model_frees_long_duration_blocker(monkeypatch: pytest.MonkeyPatc
     assert captured, "repair must build a CP-SAT model and call Solve"
     names = _model_var_names(captured[0])
     assert f"d_{fixture.long_id}" in names or f"s_{fixture.long_id}" in names
+
+
+def _custom_pair(
+    aid: str,
+    *,
+    session_date: date = _MONDAY,
+    start: int = 9 * 60,
+    fixed: str = "",
+    teachers: frozenset[str] = _TEACHER,
+    group: str = "TE/11",
+) -> tuple[Session, Activity]:
+    session = replace(
+        _session(sid=f"S_{aid}", activity_id=aid, duration_min=60, group=group),
+        session_date=session_date,
+        day=("L", "M", "X", "J", "V")[session_date.weekday()],
+        start_min=start,
+        fixed=fixed,
+        teachers=teachers,
+    )
+    activity = replace(
+        _activity(activity_id=aid, session_id=session.id, duration_min=60), fixed=fixed, teachers=teachers
+    )
+    return session, activity
+
+
+def _custom_data(
+    *pairs: tuple[Session, Activity],
+    calendar: tuple[CalendarBlock, ...] = (),
+    days_without_class: frozenset[date] = frozenset(),
+) -> TimetableData:
+    return TimetableData(
+        sessions={s.id: s for s, _ in pairs},
+        rooms={},
+        activities={a.id: a for _, a in pairs},
+        calendar=calendar,
+        days_without_class=days_without_class,
+    )
+
+
+def test_repair_places_activity_far_from_every_slot() -> None:
+    # Partida 16:00 for a morning activity: every legal start is >= 90 min away (old delta domain was 0..48 min).
+    data = _custom_data(_custom_pair("U", start=16 * 60))
+    result = repair_unplaced_with_cpsat(
+        data, placed={}, activity_day={}, activity_start={}, unplaced=["U"], max_time_s=10.0
+    )
+    assert result is not None, repair_mod.LAST_STATUS
+    new_day, new_start, _moved = result
+    assert new_day["U"] == "L"
+    assert new_start["U"] in slots_for_duration(60, "mati")
+
+
+def test_blocking_neighborhood_never_frees_pinned() -> None:
+    data = _custom_data(_custom_pair("U"), _custom_pair("P", fixed="R1-FIXADA", group="TE/21"))
+    free_ids = blocking_neighborhood(data, placed={"P": (0, 9 * 60)}, unplaced=["U"])
+    assert "P" not in free_ids
+    assert "U" in free_ids
+
+
+def test_repair_respects_calendar_and_pinned_neighbour() -> None:
+    closed = frozenset(date(2026, 9, 15 + i) for i in range(4))  # Tue..Fri of the partida week
+    aturada = CalendarBlock(_MONDAY, 12 * 60, 14 * 60 + 30, "aturada")
+    data = _custom_data(
+        _custom_pair("U"),
+        _custom_pair("P", fixed="R7: PLAB", group="TE/21"),
+        calendar=(aturada,),
+        days_without_class=closed,
+    )
+    placed = {"P": (0, 9 * 60)}
+    result = repair_unplaced_with_cpsat(
+        data,
+        placed=placed,
+        activity_day={"P": "L"},
+        activity_start={"P": 9 * 60},
+        unplaced=["U"],
+        max_time_s=10.0,
+    )
+    assert result is not None, repair_mod.LAST_STATUS
+    new_day, new_start, _moved = result
+    assert (new_day["P"], new_start["P"]) == ("L", 9 * 60)
+    assert new_day["U"] == "L"
+    assert new_start["U"] in {10 * 60, 10 * 60 + 30, 11 * 60}
+
+
+def test_repair_empty_domain_is_infeasible() -> None:
+    closed = frozenset(date(2026, 9, 15 + i) for i in range(4)) | {date(2026, 9, 21)}
+    session_a, activity = _custom_pair("E")
+    session_b = replace(session_a, id="S_E2", session_date=date(2026, 9, 22), day="M")
+    activity = replace(activity, session_ids=(session_a.id, session_b.id))
+    data = TimetableData(
+        sessions={session_a.id: session_a, session_b.id: session_b},
+        rooms={},
+        activities={activity.id: activity},
+        days_without_class=closed,
+    )
+    result = repair_unplaced_with_cpsat(
+        data, placed={}, activity_day={}, activity_start={}, unplaced=["E"], max_time_s=5.0
+    )
+    assert result is None
+    assert repair_mod.LAST_STATUS == "INFEASIBLE"
+
+
+def test_repair_uses_eight_workers_and_optimises(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[tuple[int, bool]] = []
+
+    def _capture_solve(self: cp_model.CpSolver, model: cp_model.CpModel, *args: object, **kwargs: object) -> int:
+        seen.append((self.parameters.num_search_workers, self.parameters.stop_after_first_solution))
+        return int(cp_model.UNKNOWN)
+
+    monkeypatch.setattr(repair_mod.cp_model.CpSolver, "Solve", _capture_solve)
+    fixture = _two_activity_neighborhood()
+    repair_unplaced_with_cpsat(
+        fixture.data,
+        placed=dict(fixture.placed),
+        activity_day=dict(fixture.activity_day),
+        activity_start=dict(fixture.activity_start),
+        unplaced=list(fixture.unplaced),
+        max_time_s=1.0,
+    )
+    assert seen == [(8, False)]
+
+
+def test_repair_deterministic_uses_one_worker_seed_and_deterministic_time(monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[tuple[int, int, float, float]] = []
+
+    def _capture_solve(self: cp_model.CpSolver, model: cp_model.CpModel, *args: object, **kwargs: object) -> int:
+        params = self.parameters
+        seen.append(
+            (params.num_search_workers, params.random_seed, params.max_deterministic_time, params.max_time_in_seconds)
+        )
+        return int(cp_model.UNKNOWN)
+
+    monkeypatch.setattr(repair_mod.cp_model.CpSolver, "Solve", _capture_solve)
+    fixture = _two_activity_neighborhood()
+    repair_unplaced_with_cpsat(
+        fixture.data,
+        placed=dict(fixture.placed),
+        activity_day=dict(fixture.activity_day),
+        activity_start=dict(fixture.activity_start),
+        unplaced=list(fixture.unplaced),
+        max_time_s=2.0,
+        random_seed=7,
+        deterministic=True,
+    )
+    assert seen == [(1, 7, 2.0, 2.0)]
+
+
+def test_repair_deterministic_runs_are_identical() -> None:
+    data = _custom_data(_custom_pair("U", start=16 * 60), _custom_pair("V", start=16 * 60, group="TE/21"))
+    runs = [
+        repair_unplaced_with_cpsat(
+            data,
+            placed={},
+            activity_day={},
+            activity_start={},
+            unplaced=["U", "V"],
+            max_time_s=5.0,
+            random_seed=3,
+            deterministic=True,
+        )
+        for _ in range(2)
+    ]
+    assert runs[0] is not None, repair_mod.LAST_STATUS
+    assert runs[0] == runs[1]
+
+
+def test_repair_never_mutates_its_arguments() -> None:
+    data = _custom_data(_custom_pair("U", start=16 * 60), _custom_pair("P", fixed="R1-FIXADA", group="TE/21"))
+    placed = {"P": (0, 9 * 60)}
+    activity_day = {"P": "L"}
+    activity_start = {"P": 9 * 60}
+    unplaced = ["U"]
+    result = repair_unplaced_with_cpsat(
+        data,
+        placed=placed,
+        activity_day=activity_day,
+        activity_start=activity_start,
+        unplaced=unplaced,
+        max_time_s=5.0,
+    )
+    assert result is not None, repair_mod.LAST_STATUS
+    assert placed == {"P": (0, 9 * 60)}
+    assert activity_day == {"P": "L"}
+    assert activity_start == {"P": 9 * 60}
+    assert unplaced == ["U"]
+    assert "U" in result[0]
+
+
+def test_repair_with_nothing_unplaced_returns_new_dicts() -> None:
+    activity_day = {"P": "L"}
+    activity_start = {"P": 9 * 60}
+    result = repair_unplaced_with_cpsat(
+        _custom_data(_custom_pair("P")),
+        placed={"P": (0, 9 * 60)},
+        activity_day=activity_day,
+        activity_start=activity_start,
+        unplaced=[],
+    )
+    assert result == ({"P": "L"}, {"P": 9 * 60}, 0)
+    assert result[0] is not activity_day
+    assert result[1] is not activity_start

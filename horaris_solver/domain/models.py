@@ -7,7 +7,7 @@ from datetime import date
 
 DIES = ("L", "M", "X", "J", "V")
 MATI = (8 * 60 + 30, 14 * 60 + 30)  # 08:30–14:30
-TARDA = (15 * 60, 21 * 60)  # 15:00–21:00 (gap 14:30–15:00)
+TARDA = (14 * 60 + 30, 21 * 60)  # 14:30–21:00, as in the verifier (R1-TORN: start < 14:30 is morning)
 TIPUS_ORDINARIA = "Aules docents"
 
 

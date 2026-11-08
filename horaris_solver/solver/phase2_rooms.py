@@ -2,20 +2,31 @@
 
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 
 from ortools.sat.python import cp_model
 
 from horaris_solver.domain.models import TIPUS_ORDINARIA, Assignment, Session, TimetableData
+from horaris_solver.solver.budget import Deadline
 from horaris_solver.solver.calendar_rules import remap_date
 from horaris_solver.solver.passadis import passadis
-from horaris_solver.solver.soft_weights import WEIGHT_CANVI_AULA, WEIGHT_FORA_PASSADIS
+from horaris_solver.solver.room_rules import (
+    RESERVA_MIN,
+    r1_room_pinned,
+    r7_room_pinned,
+    room_candidates,
+    unit_students,
+)
+from horaris_solver.solver.soft_weights import WEIGHT_CANVI_AULA, WEIGHT_FORA_PASSADIS, WEIGHT_SIN_AULA
 
-AULA_GENERAL = frozenset({"Aules docents", "Seminaris"})
-ESPAI_PRACTIQUES = frozenset({"Laboratoris docents", "Aules informàtiques"})
-RESERVA_MIN = 2
 FRANGES = [(8 * 60 + 30) + 60 * i for i in range(13)]
+STRICT_R8_SHARE = 0.5
+SOFT_R8_SHARE = 0.5  # of the time left after the strict attempt; the partial attempt gets the rest
+
+_clock: Callable[[], float] = time.monotonic
 
 
 @dataclass(frozen=True)
@@ -26,57 +37,7 @@ class Phase2Result:
     message: str
     r8_relaxed: bool = False
     objective: int = 0
-
-
-def _tipus_permesos(data: TimetableData, session: Session) -> frozenset[str]:
-    if session.room_partida in data.rooms:
-        kind = data.rooms[session.room_partida].kind
-        if kind == "Laboratoris docents" and session.kind != "PLAB":
-            return AULA_GENERAL
-        return AULA_GENERAL if kind in AULA_GENERAL else frozenset({kind})
-    return ESPAI_PRACTIQUES if session.kind == "PLAB" else AULA_GENERAL
-
-
-def _espai_ok(data: TimetableData, session: Session, room_code: str) -> bool:
-    room = data.rooms[room_code]
-    if session.kind == "PAUL" and (room.integrated or room.kind == "Aules informàtiques"):
-        return True
-    return room.kind in _tipus_permesos(data, session)
-
-
-def _r7_time_unchanged(session: Session, timed: dict[str, Assignment] | None) -> bool:
-    if timed is None or session.id not in timed:
-        return True
-    assignment = timed[session.id]
-    return assignment.day == session.day and assignment.start_min == session.start_min
-
-
-def _candidates(
-    data: TimetableData,
-    session: Session,
-    timed: dict[str, Assignment] | None = None,
-) -> list[str]:
-    if session.sense_espai:
-        return [""]
-    if session.kind == "PLAB" and session.fixed.startswith("R7") and not session.room_partida:
-        return [""]
-    # Keep partida lab only when day/time were not repaired away from partida.
-    if session.fixed.startswith("R7") and session.room_partida and _r7_time_unchanged(session, timed):
-        return [session.room_partida]
-    out: list[str] = []
-    for room in data.rooms.values():
-        if room.capacity < session.students and session.students > 0:
-            continue
-        if not _espai_ok(data, session, room.code):
-            continue
-        if room.code.startswith("J/"):
-            continue
-        out.append(room.code)
-    partida = session.room_partida
-    if partida and partida in data.rooms and partida not in out:
-        if _espai_ok(data, session, partida):
-            out.append(partida)
-    return out
+    unassigned: tuple[str, ...] = ()
 
 
 def _placed_date(session: Session, assignment: Assignment) -> date:
@@ -87,50 +48,87 @@ def solve_phase2(
     data: TimetableData,
     timed: list[Assignment],
     *,
-    max_time_s: int = 150,
+    max_time_s: float = 150,
     r8_soft_fallback: bool = True,
 ) -> Phase2Result:
+    """Assign rooms: strict R8, then soft R8, then a partial attempt where movable sessions may get no room.
+
+    Strict gets half the budget, soft half of what is left and the partial attempt the rest, so the
+    three attempts never exceed ``max_time_s``. Without the fallback, strict gets the whole budget.
+    """
     by_id = {a.session_id: a for a in timed}
-    result = _solve_rooms(data, by_id, max_time_s=max_time_s, soft_r8=False)
+    deadline = Deadline(max_time_s, clock=_clock)
+    strict_s = STRICT_R8_SHARE * max_time_s if r8_soft_fallback else max_time_s
+    result = _solve_rooms(data, by_id, max_time_s=strict_s, soft_r8=False)
     if result.ok or not r8_soft_fallback:
         return result
-    soft = _solve_rooms(data, by_id, max_time_s=max_time_s, soft_r8=True)
+    soft = _solve_rooms(data, by_id, max_time_s=SOFT_R8_SHARE * deadline.remaining(), soft_r8=True)
     if soft.ok:
-        return Phase2Result(
-            True,
-            soft.assignments,
-            soft.status,
-            "phase2 ok with R8 soft",
-            True,
-            objective=soft.objective,
-        )
-    return soft
+        return _soft_ok(soft)
+    partial = _solve_rooms(data, by_id, max_time_s=deadline.remaining(), soft_r8=True, allow_unassigned=True)
+    if not partial.ok:
+        return partial
+    if not partial.unassigned:
+        return _soft_ok(partial)
+    return Phase2Result(
+        True,
+        partial.assignments,
+        partial.status,
+        f"phase2 partial unassigned={len(partial.unassigned)}",
+        True,
+        objective=partial.objective,
+        unassigned=partial.unassigned,
+    )
+
+
+def _soft_ok(result: Phase2Result) -> Phase2Result:
+    return Phase2Result(
+        True, result.assignments, result.status, "phase2 ok with R8 soft", True, objective=result.objective
+    )
 
 
 def _solve_rooms(
     data: TimetableData,
     timed: dict[str, Assignment],
     *,
-    max_time_s: int,
+    max_time_s: float,
     soft_r8: bool,
+    allow_unassigned: bool = False,
 ) -> Phase2Result:
+    """One CP-SAT room model; ``allow_unassigned`` lets movable sessions take "" at a dominant penalty."""
     model = cp_model.CpModel()
-    room_index = {code: i for i, code in enumerate(sorted(data.rooms))}
+    needing = [s for s in data.sessions.values() if not s.sense_espai]
+    unit_load = unit_students(data)
+    candidates_of = {s.id: room_candidates(data, s, timed, unit_load) for s in needing}
+    # R7 PLABs keep partida rooms outside data.rooms (e.g. J/): index them as ordinary resources.
+    external = {c for cands in candidates_of.values() for c in cands if c and c not in data.rooms}
+    room_index = {code: i for i, code in enumerate(sorted(set(data.rooms) | external))}
     room_index[""] = len(room_index)
     index_room = {i: code for code, i in room_index.items()}
 
     session_room: dict[str, cp_model.IntVar] = {}
-    needing = [s for s in data.sessions.values() if not s.sense_espai]
     placed: dict[str, date] = {s.id: _placed_date(s, timed[s.id]) for s in data.sessions.values() if s.id in timed}
+    pinned: set[str] = set()
+    # Movable sessions that may be left without room in the partial attempt (True = no room).
+    unassigned: dict[str, cp_model.IntVar] = {}
 
     for session in needing:
-        candidates = _candidates(data, session, timed)
-        if not candidates:
+        candidates = candidates_of[session.id]
+        is_pinned = r7_room_pinned(session, timed) or r1_room_pinned(data, session, timed)
+        if not candidates and not (allow_unassigned and not is_pinned):
             return Phase2Result(False, [], "INFEASIBLE", f"no room candidates for {session.id}")
         domain = [room_index[c] for c in candidates]
+        if allow_unassigned and not is_pinned and "" not in candidates:
+            domain.append(room_index[""])
         session_room[session.id] = model.NewIntVarFromDomain(cp_model.Domain.FromValues(domain), f"room_{session.id}")
-        if session.fixed.startswith("R7") and session.room_partida in room_index and _r7_time_unchanged(session, timed):
+        if is_pinned:
             model.Add(session_room[session.id] == room_index[session.room_partida])
+            pinned.add(session.id)
+        elif len(domain) > len(candidates):
+            empty = model.NewBoolVar(f"no_room_{session.id}")
+            model.Add(session_room[session.id] == room_index[""]).OnlyEnforceIf(empty)
+            model.Add(session_room[session.id] != room_index[""]).OnlyEnforceIf(empty.Not())
+            unassigned[session.id] = empty
 
     # No room double-booking on overlapping sessions same calendar DATE
     sessions_list = needing
@@ -148,13 +146,35 @@ def _solve_rooms(
             if left.unit == right.unit:
                 model.Add(session_room[left.id] == session_room[right.id])
                 continue
-            model.Add(session_room[left.id] != session_room[right.id])
+            if left.id in pinned and right.id in pinned:
+                # Both are constants in their partida room: an overlap is inherited (verifier heretada='fixada').
+                continue
+            if candidates_of[left.id] == [""] or candidates_of[right.id] == [""]:
+                # No room (R7 PLAB without partida room) is not a resource and cannot be double-booked.
+                continue
+            both_roomed = [unassigned[sid].Not() for sid in (left.id, right.id) if sid in unassigned]
+            # Sessions left without room are not a resource: they never clash with each other.
+            model.Add(session_room[left.id] != session_room[right.id]).OnlyEnforceIf(both_roomed)
 
     ordinary = [code for code, room in data.rooms.items() if room.kind == TIPUS_ORDINARIA]
+    r8_inherited = 0
     if len(ordinary) >= RESERVA_MIN and not soft_r8:
         dates = sorted({placed[s.id] for s in needing})
         for day_date in dates:
             for fringe in FRANGES:
+                pinned_rooms = {
+                    data.sessions[sid].room_partida
+                    for sid in pinned
+                    if placed[sid] == day_date
+                    and timed[sid].start_min < fringe + 60
+                    and timed[sid].start_min + data.sessions[sid].duration_min > fringe
+                }
+                pinned_used = len(pinned_rooms.intersection(ordinary))
+                limit = len(ordinary) - RESERVA_MIN
+                if pinned_used > limit:
+                    # Inherited excess: movable sessions may not take any further ordinary room here.
+                    r8_inherited += 1
+                    limit = pinned_used
                 occupied_bools: list[cp_model.IntVar] = []
                 for room_code in ordinary:
                     used = model.NewBoolVar(f"used_{day_date}_{fringe}_{room_code}")
@@ -177,9 +197,9 @@ def _solve_rooms(
                     else:
                         model.Add(used == 0)
                     occupied_bools.append(used)
-                model.Add(sum(occupied_bools) <= len(ordinary) - RESERVA_MIN)
+                model.Add(sum(occupied_bools) <= limit)
 
-    soft_terms: list[cp_model.LinearExprT] = []
+    soft_terms: list[cp_model.LinearExprT] = [empty * WEIGHT_SIN_AULA for empty in unassigned.values()]
 
     # Soft: penalize leaving aula_partida
     for session in needing:
@@ -214,7 +234,7 @@ def _solve_rooms(
         model.Minimize(sum(soft_terms))
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = float(max_time_s)
+    solver.parameters.max_time_in_seconds = max_time_s
     solver.parameters.num_search_workers = 8
     status = solver.Solve(model)
     status_name = solver.StatusName(status)
@@ -239,7 +259,9 @@ def _solve_rooms(
             )
         )
     objective = int(solver.ObjectiveValue()) if soft_terms else 0
-    return Phase2Result(True, out, status_name, "phase2 ok", soft_r8, objective=objective)
+    message = f"phase2 ok r8_inherited={r8_inherited}" if r8_inherited else "phase2 ok"
+    left_out = tuple(sorted(sid for sid, empty in unassigned.items() if solver.Value(empty)))
+    return Phase2Result(True, out, status_name, message, soft_r8, objective=objective, unassigned=left_out)
 
 
 def _te_paul_consecutive_pairs(

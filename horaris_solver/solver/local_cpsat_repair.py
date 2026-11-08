@@ -7,7 +7,17 @@ from typing import TYPE_CHECKING
 from horaris_solver.domain.models import TimetableData
 from horaris_solver.solver.calendar_rules import activities_share_iso_week
 from horaris_solver.solver.conflicts import activities_interact, session_template
-from horaris_solver.solver.slots import day_from_index, day_index, slots_for_duration
+from horaris_solver.solver.feasibility import domain_values, is_pinned
+from horaris_solver.solver.inherited import is_inherited_pair, partida_overlap_pairs
+from horaris_solver.solver.phase1_time import (
+    add_domain_vars,
+    add_pair_separation,
+    add_partida_cost,
+    overlap_weight,
+    shared_groups,
+    shared_links,
+)
+from horaris_solver.solver.slots import day_from_index, day_index
 
 if TYPE_CHECKING:
     from ortools.sat.python import cp_model as cp_model
@@ -43,9 +53,9 @@ def blocking_neighborhood(
     placed: dict[str, tuple[int, int]],
     unplaced: list[str],
 ) -> set[str]:
-    """Unplaced ids plus every activity that currently clashes with them.
+    """Unplaced ids plus every movable activity that currently clashes with them.
 
-    Size caps may drop only non-blocking extras, never current clashers.
+    Pinned neighbours (R1/R7) are never freed. Size caps may drop only non-blocking extras, never clashers.
     """
     free_ids = set(unplaced)
     clashers: set[str] = set()
@@ -57,6 +67,8 @@ def blocking_neighborhood(
             if neighbor_id in unplaced_set:
                 continue
             neighbor = data.activities[neighbor_id]
+            if is_pinned(neighbor):
+                continue
             if not activities_interact(seed, neighbor, data):
                 extras.append(neighbor_id)
                 continue
@@ -81,55 +93,61 @@ def repair_unplaced_with_cpsat(
     activity_day: dict[str, str],
     activity_start: dict[str, int],
     unplaced: list[str],
-    max_time_s: int = 30,
+    max_time_s: float = 30,
+    random_seed: int | None = None,
+    deterministic: bool = False,
 ) -> tuple[dict[str, str], dict[str, int], int] | None:
     """Free neighbors of ``unplaced`` and re-solve that subgraph with CP-SAT.
 
-    Returns updated day/start maps and extra moves, or None if still infeasible
+    Returns new day/start maps and extra moves, or None if still infeasible
     or timed out (see LAST_STATUS). UNKNOWN is not labelled INFEASIBLE.
+    The arguments are never mutated. ``deterministic`` uses one worker and a
+    deterministic-time limit (wall time still capped at ``max_time_s``).
     """
     global LAST_STATUS
     LAST_STATUS = None
     if not unplaced:
         LAST_STATUS = "OK"
-        return activity_day, activity_start, 0
+        return dict(activity_day), dict(activity_start), 0
 
     free_ids = blocking_neighborhood(data, placed=placed, unplaced=unplaced)
 
     model = cp_model.CpModel()
     day_vars: dict[str, cp_model.IntVar] = {}
     start_vars: dict[str, cp_model.IntVar] = {}
+    domains: dict[str, frozenset[tuple[int, int]]] = {}
+    fixed_ids: set[str] = set()
+    soft: list[cp_model.LinearExprT] = []
 
     for aid, (day_idx, start) in placed.items():
         if aid in free_ids:
             continue
         day_vars[aid] = model.NewConstant(day_idx)
         start_vars[aid] = model.NewConstant(start)
+        domains[aid] = frozenset({(day_idx, start)})
+        fixed_ids.add(aid)
 
-    for aid in free_ids:
+    for aid in sorted(free_ids):
         activity = data.activities[aid]
-        slots = slots_for_duration(activity.duration_min, activity.turn)
-        if not slots:
+        values = domain_values(data, activity)
+        if not values:
             LAST_STATUS = "INFEASIBLE"
             return None
-        day_vars[aid] = model.NewIntVar(0, 4, f"d_{aid}")
-        start_vars[aid] = model.NewIntVarFromDomain(cp_model.Domain.FromValues(slots), f"s_{aid}")
+        domains[aid] = frozenset(values)
+        if is_pinned(activity):
+            fixed_ids.add(aid)
+        day_vars[aid], start_vars[aid] = add_domain_vars(model, aid, values, day_prefix="d_", start_prefix="s_")
+        template = session_template(data, activity)
+        partida = (day_index(template.day), template.start_min)
+        soft.extend(add_partida_cost(model, aid, partida, day_vars[aid], start_vars[aid]))
 
-    shared: dict[str, list[str]] = {}
-    for session in data.sessions.values():
-        if session.shared_id and session.activity_id in day_vars:
-            shared.setdefault(session.shared_id, []).append(session.activity_id)
-    for aids in shared.values():
-        unique = sorted(set(aids))
-        if len(unique) < 2:
-            continue
-        root_id = unique[0]
-        for peer_id in unique[1:]:
+    for group in shared_groups(data, day_vars):
+        for root_id, peer_id in shared_links(group, domains, fixed_ids):
             model.Add(day_vars[peer_id] == day_vars[root_id])
             model.Add(start_vars[peer_id] == start_vars[root_id])
 
-    free_list = sorted(free_ids)
     all_ids = list(day_vars)
+    inherited = partida_overlap_pairs(data)
     for i, left_id in enumerate(all_ids):
         left = data.activities[left_id]
         for right_id in all_ids[i + 1 :]:
@@ -140,36 +158,30 @@ def repair_unplaced_with_cpsat(
                 continue
             if left_id not in free_ids and right_id not in free_ids:
                 continue
-            same = model.NewBoolVar(f"same_{left_id}_{right_id}")
-            model.Add(day_vars[left_id] == day_vars[right_id]).OnlyEnforceIf(same)
-            model.Add(day_vars[left_id] != day_vars[right_id]).OnlyEnforceIf(same.Not())
-            left_before = model.NewBoolVar(f"lb_{left_id}_{right_id}")
-            right_before = model.NewBoolVar(f"rb_{left_id}_{right_id}")
-            model.Add(start_vars[left_id] + left.duration_min <= start_vars[right_id]).OnlyEnforceIf(
-                [same, left_before]
+            if is_pinned(left) and is_pinned(right):
+                continue  # clash inherited from partida (verifier: heretada)
+            # Pairs already overlapping in partida are inherited (verifier: heretada): soft, never hard.
+            add_pair_separation(
+                model,
+                ((left_id, left.duration_min), (right_id, right.duration_min)),
+                day_vars,
+                start_vars,
+                overlap_weight=overlap_weight(is_inherited_pair(inherited, left_id, right_id), False),
+                soft_terms=soft,
             )
-            model.Add(start_vars[right_id] + right.duration_min <= start_vars[left_id]).OnlyEnforceIf(
-                [same, right_before]
-            )
-            model.AddBoolOr([same.Not(), left_before, right_before])
 
-    soft: list[cp_model.LinearExprT] = []
-    for aid in free_list:
-        template = session_template(data, data.activities[aid])
-        chg = model.NewBoolVar(f"chg_{aid}")
-        model.Add(day_vars[aid] != day_index(template.day)).OnlyEnforceIf(chg)
-        model.Add(day_vars[aid] == day_index(template.day)).OnlyEnforceIf(chg.Not())
-        soft.append(chg)
-        delta = model.NewIntVar(0, 24 * 2, f"ds_{aid}")
-        model.AddAbsEquality(delta, start_vars[aid] - template.start_min)
-        soft.append(delta)
     if soft:
         model.Minimize(sum(soft))
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = float(max_time_s)
-    solver.parameters.num_search_workers = 1
-    solver.parameters.stop_after_first_solution = True
+    if deterministic:
+        solver.parameters.max_deterministic_time = float(max_time_s)
+        solver.parameters.num_search_workers = 1
+    else:
+        solver.parameters.num_search_workers = 8
+    if random_seed is not None:
+        solver.parameters.random_seed = random_seed
     status = solver.Solve(model)
     status_code = int(status)
     if status_code == int(cp_model.UNKNOWN):
@@ -191,6 +203,5 @@ def repair_unplaced_with_cpsat(
             moved_extra += 1
         new_day[aid] = day_from_index(day_idx)
         new_start[aid] = start
-        placed[aid] = (day_idx, start)
 
     return new_day, new_start, moved_extra

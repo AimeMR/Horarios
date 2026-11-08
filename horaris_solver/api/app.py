@@ -4,23 +4,33 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, Self
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
+from horaris_solver.solver.budget import PORTFOLIO_MIN_TOTAL_S
 from horaris_solver.solver.pipeline import solve_and_export
+from horaris_solver.solver.portfolio import PortfolioConfig
 
 logger = logging.getLogger(__name__)
 
 DEFAULT_MAX_CONCURRENT_JOBS = 1
 DEFAULT_API_MAX_TIME_S = 300
+_FAILURE_STATUS = re.compile(r"^(no sessions after filter|portfolio needs|phase\d failed(?:: [A-Z_]+)?)")
+
+
+def failure_status(summary: str) -> str:
+    """Short, id- and path-free status for server logs."""
+    match = _FAILURE_STATUS.match(summary)
+    return match.group(1) if match else "failed"
 
 
 class JobStatus(StrEnum):
@@ -34,6 +44,10 @@ class SolveJobRequest(BaseModel):
     paquet_path: str = Field(..., min_length=1, max_length=512)
     semestre: int | None = None
     max_time_s: int | None = Field(default=None, ge=1, le=3600)
+    strategy: Literal["hybrid", "greedy", "cpsat", "portfolio"] = "hybrid"
+    seed: int = Field(default=0, ge=0, le=2**31 - 1)
+    portfolio_size: int = Field(default=16, ge=1, le=64)
+    top_k: int = Field(default=3, ge=1, le=8)
 
     @field_validator("semestre")
     @classmethod
@@ -43,6 +57,21 @@ class SolveJobRequest(BaseModel):
         if value not in (1, 2):
             raise ValueError("semestre must be 1 or 2")
         return value
+
+    @model_validator(mode="after")
+    def _strategy_options_ok(self) -> Self:
+        if self.strategy != "portfolio":
+            return self
+        if self.top_k > self.portfolio_size:
+            raise ValueError("top_k must be <= portfolio_size")
+        if self.max_time_s is not None and self.max_time_s < PORTFOLIO_MIN_TOTAL_S:
+            raise ValueError(f"max_time_s must be >= {PORTFOLIO_MIN_TOTAL_S:g} for the portfolio strategy")
+        return self
+
+    def portfolio_config(self) -> PortfolioConfig | None:
+        if self.strategy != "portfolio":
+            return None
+        return PortfolioConfig(seed=self.seed, size=self.portfolio_size, top_k=self.top_k)
 
 
 @dataclass
@@ -218,6 +247,8 @@ def _run_job(record: JobRecord, output_root: Path, slots: threading.BoundedSemap
             semestre=record.request.semestre,
             max_time_s=max_time,
             json_out=out_json,
+            strategy=record.request.strategy,
+            portfolio=record.request.portfolio_config(),
         )
         with record.lock:
             if result.ok:
@@ -227,7 +258,7 @@ def _run_job(record: JobRecord, output_root: Path, slots: threading.BoundedSemap
                 record.summary = "solve failed"
                 record.error = "solve failed"
                 record.status = JobStatus.failed
-                logger.warning("job %s failed: %s", record.id, result.summary)
+                logger.warning("job %s failed: %s", record.id, failure_status(result.summary))
     except Exception:
         logger.exception("job %s crashed", record.id)
         with record.lock:

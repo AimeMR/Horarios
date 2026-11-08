@@ -8,7 +8,7 @@ from horaris_solver.solver.slots import slots_for_duration
 def test_turn_windows() -> None:
     assert fmt(MATI[0]) == "08:30"
     assert fmt(MATI[1]) == "14:30"
-    assert fmt(TARDA[0]) == "15:00"
+    assert fmt(TARDA[0]) == "14:30"
     assert fmt(TARDA[1]) == "21:00"
 
 
@@ -19,11 +19,28 @@ def test_morning_slots_fit_window() -> None:
     assert TARDA[0] not in starts
 
 
-def test_afternoon_slots_start_at_1500() -> None:
+def test_afternoon_slots_start_at_1430() -> None:
+    """The verifier's afternoon window is 14:30-21:00 (R1-TORN: start < 14:30 is morning)."""
     starts = slots_for_duration(60, "tarda")
-    assert starts[0] == TARDA[0]
+    assert starts[0] == TARDA[0] == hm("14:30")
+    assert hm("14:30") in starts
     assert all(s >= TARDA[0] and s + 60 <= TARDA[1] for s in starts)
-    assert MATI[1] not in starts  # 14:30 is not an afternoon start
+
+
+def test_afternoon_slots_exclude_morning_start() -> None:
+    assert hm("08:30") not in slots_for_duration(60, "tarda")
+
+
+def test_start_fits_turn_accepts_1430_afternoon() -> None:
+    assert slots_mod.start_fits_turn(hm("14:30"), 60, "tarda") is True
+
+
+def test_session_straddling_1430_fits_no_window() -> None:
+    """13:30-15:30 crosses the 14:30 boundary: neither morning nor afternoon contains it."""
+    start = hm("13:30")
+    for turn in ("mati", "tarda", "?"):
+        assert slots_mod.start_fits_turn(start, 120, turn) is False
+        assert start not in slots_for_duration(120, turn)
 
 
 def test_start_fits_turn_rejects_morning_lab_past_window() -> None:
