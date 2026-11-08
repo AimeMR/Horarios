@@ -1,4 +1,15 @@
-# Logs
+# ==============================================================================
+# DEPENDENCIAS Y BUILDS
+# ==============================================================================
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+
+# ==============================================================================
+# LOGS
+# ==============================================================================
 logs
 *.log
 npm-debug.log*
@@ -7,19 +18,46 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ==============================================================================
+# MATERIAL DEL RETO Y BASE DE DATOS LOCAL
+# ==============================================================================
+# Material del reto: datos pseudonimizados y verificador oficial. No se publican.
+repte-horaris-escola/
 
-# Editor directories and files
+# Base de datos generada (contiene los datos del paquete)
+*.db
+*.db-*
+*.sqlite*
+
+# Propuestas e informes exportados (contienen datos del paquete)
+out/
+
+# ==============================================================================
+# ENTORNO LOCAL
+# ==============================================================================
+.env
+.env.*
+!.env.example
+
+# ==============================================================================
+# EDITORES Y SISTEMA
+# ==============================================================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
+# ==============================================================================
+# PYTHON (Extractor / Scripts)
+# ==============================================================================
+__pycache__/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/

@@ -1,0 +1,4 @@
+* text=auto eol=lf
+
+# Las fixtures se comparan byte a byte: Git no debe tocar sus finales de línea.
+tests/fixtures/** -text

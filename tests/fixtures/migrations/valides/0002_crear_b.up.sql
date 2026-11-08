@@ -1,0 +1,4 @@
+CREATE TABLE b (
+    id    INTEGER PRIMARY KEY,
+    id_a  INTEGER NOT NULL REFERENCES a(id)
+);
