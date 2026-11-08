@@ -184,14 +184,14 @@ def _add_online_activity(path: Path) -> None:
     conn.close()
 
 
-def test_sqlite_loader_marks_online_activity_roomless(tmp_path: Path) -> None:
+def test_sqlite_loader_loads_a0826_as_regular(tmp_path: Path) -> None:
     db = tmp_path / "mini.db"
     _create_mini_db(db)
     _add_online_activity(db)
     data = SqliteTimetableSource(db).load(semestre=1)
     online = data.sessions["S00002"]
-    assert online.online is True and online.sense_espai is True
-    assert data.activities["A0826"].sense_espai is True
+    assert online.online is False and online.sense_espai is False
+    assert data.activities["A0826"].sense_espai is False
     regular = data.sessions["S00001"]
     assert regular.online is False and regular.sense_espai is False
     assert data.activities["A1"].sense_espai is False

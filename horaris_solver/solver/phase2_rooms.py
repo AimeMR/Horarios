@@ -20,7 +20,7 @@ from horaris_solver.solver.room_rules import (
     room_candidates,
     unit_students,
 )
-from horaris_solver.solver.soft_weights import WEIGHT_CANVI_AULA, WEIGHT_FORA_PASSADIS, WEIGHT_SIN_AULA
+from horaris_solver.soft_weights import WEIGHT_CANVI_AULA, WEIGHT_FORA_PASSADIS, WEIGHT_SIN_AULA
 
 FRANGES = [(8 * 60 + 30) + 60 * i for i in range(13)]
 STRICT_R8_SHARE = 0.5
@@ -158,7 +158,7 @@ def _solve_rooms(
 
     ordinary = [code for code, room in data.rooms.items() if room.kind == TIPUS_ORDINARIA]
     r8_inherited = 0
-    if len(ordinary) >= RESERVA_MIN and not soft_r8:
+    if len(ordinary) >= RESERVA_MIN:
         dates = sorted({placed[s.id] for s in needing})
         for day_date in dates:
             for fringe in FRANGES:
@@ -170,16 +170,19 @@ def _solve_rooms(
                     and timed[sid].start_min + data.sessions[sid].duration_min > fringe
                 }
                 pinned_used = len(pinned_rooms.intersection(ordinary))
-                limit = len(ordinary) - RESERVA_MIN
-                if pinned_used > limit:
-                    # Inherited excess: movable sessions may not take any further ordinary room here.
+                limit = len(ordinary) - RESERVA_MIN - pinned_used
+                if limit < 0:
+                    # Inherited excess: pinned sessions alone already exceed the limit.
+                    # Movable sessions may not occupy any further ordinary room in this fringe.
                     r8_inherited += 1
-                    limit = pinned_used
+                    limit = 0
                 occupied_bools: list[cp_model.IntVar] = []
                 for room_code in ordinary:
                     used = model.NewBoolVar(f"used_{day_date}_{fringe}_{room_code}")
                     literals: list[cp_model.IntVar] = []
                     for session in needing:
+                        if session.id in pinned:
+                            continue
                         assignment = timed[session.id]
                         if placed[session.id] != day_date:
                             continue
@@ -197,7 +200,12 @@ def _solve_rooms(
                     else:
                         model.Add(used == 0)
                     occupied_bools.append(used)
-                model.Add(sum(occupied_bools) <= limit)
+                if not soft_r8:
+                    model.Add(sum(occupied_bools) <= limit)
+                else:
+                    excess = model.NewIntVar(0, len(ordinary), f"r8_excess_{day_date}_{fringe}")
+                    model.Add(sum(occupied_bools) - limit <= excess)
+                    soft_terms.append(excess * 50_000)
 
     soft_terms: list[cp_model.LinearExprT] = [empty * WEIGHT_SIN_AULA for empty in unassigned.values()]
 

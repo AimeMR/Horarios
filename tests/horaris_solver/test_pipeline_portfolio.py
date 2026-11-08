@@ -609,14 +609,15 @@ def test_portfolio_writes_online_sessions_as_online(tmp_path: Path, monkeypatch:
         if source.name == "sessions.csv":
             text = text.replace(",A1,", ",A0826,")
         (paquet / source.name).write_text(text, encoding="utf-8")
-    online = CsvTimetableSource(paquet).load()
-    best = _partida_map(online)
+    loaded = CsvTimetableSource(paquet).load()
+    best = _partida_map(loaded)
     assignments = [
-        Assignment(s.id, s.day, s.start_min, "" if s.online else "Q1/1011") for s in online.sessions.values()
+        Assignment(s.id, s.day, s.start_min, "Q1/1003" if s.activity_id == "A0826" else "Q1/1011")
+        for s in loaded.sessions.values()
     ]
     _install(
         monkeypatch,
-        online,
+        loaded,
         _portfolio_result(best, (best,)),
         _Phase2Script([Phase2Result(True, assignments, "OPTIMAL", "ok")]),
     )
@@ -625,5 +626,5 @@ def test_portfolio_writes_online_sessions_as_online(tmp_path: Path, monkeypatch:
     pipeline.solve_and_export(out_csv=out, max_time_s=20, strategy="portfolio")
 
     rows = dict(line.split(",", 1) for line in out.read_text(encoding="utf-8").splitlines()[1:])
-    assert rows["S00001"].endswith(",ONLINE") and rows["S00002"].endswith(",ONLINE")
+    assert rows["S00001"].endswith(",Q1/1003") and rows["S00002"].endswith(",Q1/1003")
     assert rows["S00003"].endswith(",Q1/1011")

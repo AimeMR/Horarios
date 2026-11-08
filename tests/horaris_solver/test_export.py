@@ -27,18 +27,18 @@ def test_write_proposta_csv(tmp_path: Path) -> None:
     assert lines[1].startswith("S00001,L,09:00,")
 
 
-def test_online_session_written_as_online_and_read_back(tmp_path: Path) -> None:
+def test_online_session_written_and_read_back(tmp_path: Path) -> None:
     path = tmp_path / "proposta.csv"
     rows = [
-        Assignment(session_id="S00001", day="L", start_min=540, room=""),
+        Assignment(session_id="S00001", day="L", start_min=540, room="Q1/1003"),
         Assignment(session_id="S00002", day="M", start_min=510, room="Q1/1011"),
     ]
-    write_proposta_csv(path, rows, online_ids=frozenset({"S00001"}))
+    write_proposta_csv(path, rows)
     lines = path.read_text(encoding="utf-8").strip().splitlines()
-    assert lines[1] == "S00001,L,09:00,ONLINE"
+    assert lines[1] == "S00001,L,09:00,Q1/1003"
     assert lines[2] == "S00002,M,08:30,Q1/1011"
     back = {a.session_id: a for a in read_proposta_csv(path)}
-    assert back["S00001"].room == ONLINE_ROOM
+    assert back["S00001"].room == "Q1/1003"
     assert back["S00002"].room == "Q1/1011"
 
 

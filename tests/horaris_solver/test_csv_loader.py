@@ -38,12 +38,12 @@ def _paquet_with_online_activity(tmp_path: Path) -> Path:
     return paquet
 
 
-def test_online_activity_sessions_are_online_and_roomless(tmp_path: Path) -> None:
+def test_a0826_activity_sessions_are_regular(tmp_path: Path) -> None:
     data = CsvTimetableSource(_paquet_with_online_activity(tmp_path)).load()
     for sid in ("S00001", "S00002"):
-        assert data.sessions[sid].online is True
-        assert data.sessions[sid].sense_espai is True
-    assert data.activities["A0826"].sense_espai is True
+        assert data.sessions[sid].online is False
+        assert data.sessions[sid].sense_espai is False
+    assert data.activities["A0826"].sense_espai is False
 
 
 def test_other_sessions_are_not_online(tmp_path: Path) -> None:

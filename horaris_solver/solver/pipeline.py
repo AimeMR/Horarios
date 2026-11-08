@@ -403,8 +403,7 @@ def solve_and_export(
     complete = not phase2.unassigned
     json_status = "ok" if clean and complete else ("diagnostic" if complete else "partial")
 
-    online_ids = frozenset(s.id for s in data.sessions.values() if s.online)
-    write_proposta_csv(out_csv, phase2.assignments, order=data.order, online_ids=online_ids)
+    write_proposta_csv(out_csv, phase2.assignments, order=data.order)
     deficit_rows: tuple[DeficitRow, ...] | None = None
     if deficit_out is not None:
         deficit_rows = compute_deficit(data, phase2.assignments)

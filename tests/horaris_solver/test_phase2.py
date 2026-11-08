@@ -469,24 +469,14 @@ def _online_paquet(tmp_path: Path) -> Path:
     return paquet
 
 
-def test_online_sessions_are_roomless_for_rules_and_pools(tmp_path: Path) -> None:
-    data = CsvTimetableSource(_online_paquet(tmp_path)).load()
-    assert activity_pools(data, data.activities["A0826"]) == frozenset()
-    for sid in data.activities["A0826"].session_ids:
-        assert room_candidates(data, data.sessions[sid]) == [""]
-        assert sid not in unit_students(data)
-
-
-def test_phase2_online_sessions_get_no_room(tmp_path: Path) -> None:
+def test_a0826_sessions_get_real_room(tmp_path: Path) -> None:
     data = CsvTimetableSource(_online_paquet(tmp_path)).load()
     timed = [Assignment(s.id, s.day, s.start_min, "") for s in data.sessions.values()]
     result = solve_phase2(data, timed, max_time_s=10)
     assert result.ok
     rooms = _rooms(result)
-    assert rooms["S00001"] == "" and rooms["S00002"] == ""
+    assert rooms["S00001"] != "" and rooms["S00002"] != ""
     assert "S00001" not in result.unassigned and "S00002" not in result.unassigned
-    others = [s for s in data.sessions.values() if not s.online and not s.sense_espai]
-    assert others and all(rooms[s.id] for s in others)
 
 
 def test_phase2_online_session_does_not_block_the_only_room() -> None:

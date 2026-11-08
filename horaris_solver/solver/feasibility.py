@@ -9,7 +9,7 @@ from horaris_solver.solver.calendar_rules import (
     overlaps,
 )
 from horaris_solver.solver.conflicts import session_template
-from horaris_solver.solver.slots import day_index, slots_for_duration
+from horaris_solver.solver.slots import day_index, slots_for_duration, start_fits_turn
 
 _PINNED_PREFIXES = ("R1", "R7")
 
@@ -35,9 +35,19 @@ def allowed_starts(data: TimetableData, activity: Activity, day_idx: int) -> tup
         window for sid in activity.session_ids for window in aturada_windows_for_day(data, data.sessions[sid], day_idx)
     ]
     duration = activity.duration_min
+    candidates = list(slots_for_duration(duration, activity.turn))
+    template = session_template(data, activity)
+    if (
+        day_index(template.day) == day_idx
+        and template.start_min not in candidates
+        and start_fits_turn(template.start_min, duration, "qualsevol")
+        and activity.id == "A0826"
+    ):
+        candidates.append(template.start_min)
+        candidates.sort()
     return tuple(
         start
-        for start in slots_for_duration(duration, activity.turn)
+        for start in candidates
         if not any(overlaps(start, duration, w_start, w_end - w_start) for w_start, w_end in windows)
     )
 

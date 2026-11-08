@@ -36,7 +36,7 @@ def write_proposta_csv(
     *,
     online_ids: frozenset[str] = frozenset(),
 ) -> None:
-    """Write the proposal; sessions in ``online_ids`` get ``ONLINE`` as room instead of their assignment."""
+    """Write the proposal to CSV."""
     by_id = {a.session_id: a for a in assignments}
     if order:
         ordered = [by_id[sid] for sid in order if sid in by_id]
@@ -55,6 +55,6 @@ def write_proposta_csv(
                     "id_sessio": assignment.session_id,
                     "dia": assignment.day,
                     "h_ini": fmt(assignment.start_min),
-                    "aula": ONLINE_ROOM if assignment.session_id in online_ids else assignment.room,
+                    "aula": assignment.room,
                 }
             )
